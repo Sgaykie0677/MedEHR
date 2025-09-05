@@ -30,6 +30,12 @@
             padding: 1rem;
             background-color: #eef2ff;
         }
+        .info-card {
+            background-color: #f8fafc;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
     </style>
     <!-- Firebase Libraries -->
     <script type="module">
@@ -96,23 +102,33 @@
 
         const updateDashboardProgress = (data) => {
             const completedCount = Object.values(data.assignments).filter(status => status.completed).length;
-            const totalAssignments = 4;
+            const totalAssignments = 6;
             const progressText = `You've completed <strong>${completedCount} out of ${totalAssignments}</strong> assignments.`;
             document.getElementById('progress-text').innerHTML = progressText;
             
-            // Display completed assignments on the dashboard
             const completedList = document.getElementById('completed-assignments');
             completedList.innerHTML = '';
             const assignments = data.assignments || {};
-            if (Object.keys(assignments).length > 0) {
-                for (const [key, value] of Object.entries(assignments)) {
-                    if (value.completed) {
-                        const li = document.createElement('li');
-                        li.textContent = key.replace(/-/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-                        completedList.appendChild(li);
-                    }
+            const assignmentLabels = {
+                'patient-intake-form': 'Patient Intake Form',
+                'vital-signs-form': 'Vital Signs Entry',
+                'patient-scheduling-form': 'Patient Scheduling',
+                'lab-order-form': 'Lab Order',
+                'update-demographics-form': 'Update Patient Demographics',
+                'document-history-form': 'Document Medical History',
+                'billing-coding-assignment': 'Billing & Coding'
+            };
+
+            let completedFound = false;
+            for (const [key, value] of Object.entries(assignments)) {
+                if (value.completed) {
+                    completedFound = true;
+                    const li = document.createElement('li');
+                    li.textContent = assignmentLabels[key] || key.replace(/-/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+                    completedList.appendChild(li);
                 }
-            } else {
+            }
+            if (!completedFound) {
                 completedList.innerHTML = '<li>No assignments completed yet.</li>';
             }
         };
@@ -123,7 +139,10 @@
                 { id: 'patient-intake-form', startBtn: 'start-intake-assignment', form: 'patient-intake-assignment-form', successMsg: 'intake-success-message' },
                 { id: 'vital-signs-form', startBtn: 'start-vitals-assignment', form: 'vitals-assignment-form', successMsg: 'vitals-success-message' },
                 { id: 'patient-scheduling-form', startBtn: 'start-scheduling-assignment', form: 'scheduling-assignment-form', successMsg: 'scheduling-success-message' },
-                { id: 'lab-order-form', startBtn: 'start-lab-order-assignment', form: 'lab-order-assignment-form', successMsg: 'lab-order-success-message' }
+                { id: 'lab-order-form', startBtn: 'start-lab-order-assignment', form: 'lab-order-assignment-form', successMsg: 'lab-order-success-message' },
+                { id: 'update-demographics-form', startBtn: 'start-update-demographics', form: 'update-demographics-assignment-form', successMsg: 'update-demographics-success-message' },
+                { id: 'document-history-form', startBtn: 'start-document-history', form: 'document-history-assignment-form', successMsg: 'document-history-success-message' },
+                { id: 'billing-coding-assignment', startBtn: 'start-billing-assignment', form: 'billing-assignment-form', successMsg: 'billing-success-message' }
             ];
 
             assignmentList.forEach(assignment => {
@@ -262,6 +281,64 @@
                 saveAssignmentCompletion('lab-order-form');
             });
 
+            // Handle Update Demographics Form
+            document.getElementById('start-update-demographics').addEventListener('click', () => {
+                document.getElementById('update-demographics-assignment-form').classList.remove('hidden');
+            });
+            document.getElementById('update-demographics-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const newAddress = document.getElementById('new-address').value;
+                const newPhone = document.getElementById('new-phone').value;
+                const updateDemographicsErrorMessage = document.getElementById('update-demographics-form-error');
+                if (!newAddress || !newPhone) {
+                    updateDemographicsErrorMessage.textContent = 'Please provide both an address and a phone number.';
+                    updateDemographicsErrorMessage.classList.remove('hidden');
+                    return;
+                }
+                saveAssignmentCompletion('update-demographics-form');
+            });
+
+            // Handle Document History Form
+            document.getElementById('start-document-history').addEventListener('click', () => {
+                document.getElementById('document-history-assignment-form').classList.remove('hidden');
+            });
+            document.getElementById('document-history-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const allergies = document.getElementById('allergies-select').value;
+                const pastHistory = document.getElementById('history-select').value;
+                const documentHistoryErrorMessage = document.getElementById('document-history-form-error');
+                if (!allergies || !pastHistory) {
+                    documentHistoryErrorMessage.textContent = 'Please select a value for both allergies and past medical history.';
+                    documentHistoryErrorMessage.classList.remove('hidden');
+                    return;
+                }
+                saveAssignmentCompletion('document-history-form');
+            });
+            
+            // Handle Billing & Coding Form
+            document.getElementById('start-billing-assignment').addEventListener('click', () => {
+                document.getElementById('billing-assignment-form').classList.remove('hidden');
+            });
+
+            document.getElementById('billing-coding-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const icd10 = document.getElementById('icd-10-code').value.trim();
+                const cpt = document.getElementById('cpt-code').value.trim();
+                const billingErrorMessage = document.getElementById('billing-form-error');
+
+                // Basic validation: Check if codes are non-empty
+                if (!icd10 || !cpt) {
+                    billingErrorMessage.textContent = 'Please enter both an ICD-10 and a CPT code.';
+                    billingErrorMessage.classList.remove('hidden');
+                    return;
+                }
+                
+                // You can add more complex validation here for specific codes if needed
+                
+                billingErrorMessage.classList.add('hidden');
+                saveAssignmentCompletion('billing-coding-assignment');
+            });
+
             // Simple search functionality for Patient Management
             document.getElementById('patient-search-btn').addEventListener('click', () => {
                 const query = document.getElementById('patient-search-input').value.toLowerCase();
@@ -370,6 +447,58 @@
                         <li>Michael Rodriguez (DOB: 07/30/1975) - Chief complaint: Abdominal pain</li>
                         <li>Lisa Williams (DOB: 10/18/1963) - Chief complaint: Prescription refill</li>
                     </ul>
+                </div>
+                
+                <!-- Demographics Section -->
+                <div class="mt-8">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Patient Demographics & Contacts</h3>
+                    <div class="info-card grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <p class="font-semibold text-gray-700">Patient Name:</p>
+                            <p class="text-gray-600">Emily Davis</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-700">Date of Birth:</p>
+                            <p class="text-gray-600">01/15/1990</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-700">Address:</p>
+                            <p class="text-gray-600">123 Elm Street, Springfield, IL 62704</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-700">Phone Number:</p>
+                            <p class="text-gray-600">555-123-4567</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Demographics Update Assignment -->
+                <div class="assignment-panel rounded-lg mt-8">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Assignment: Update Patient Information</h3>
+                    <p class="text-gray-600 mb-6">A new patient, **Lisa Williams**, has provided updated contact information. Your task is to update her demographics in the system. Her new address is **789 Oak Avenue, Metropolis, NY 10001**, and her new phone number is **555-987-6543**.</p>
+                    <button id="start-update-demographics" class="bg-green-600 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-green-700 transition duration-300">Start Assignment</button>
+                    <div id="update-demographics-assignment-form" class="mt-8 hidden">
+                        <form id="update-demographics-form" class="space-y-4">
+                            <div>
+                                <label for="patient-name-demographics" class="block text-sm font-medium text-gray-700">Patient Name</label>
+                                <input type="text" id="patient-name-demographics" value="Lisa Williams" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-gray-100" readonly>
+                            </div>
+                            <div>
+                                <label for="new-address" class="block text-sm font-medium text-gray-700">New Address</label>
+                                <input type="text" id="new-address" name="new-address" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" required>
+                            </div>
+                            <div>
+                                <label for="new-phone" class="block text-sm font-medium text-gray-700">New Phone Number</label>
+                                <input type="tel" id="new-phone" name="new-phone" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" required>
+                            </div>
+                            <div id="update-demographics-form-error" class="text-red-500 font-medium hidden"></div>
+                            <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg hover:bg-blue-700 transition duration-300">Update Information</button>
+                        </form>
+                        <div id="update-demographics-success-message" class="form-feedback hidden mt-6 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 rounded-md">
+                            <p class="font-bold">Assignment Complete!</p>
+                            <p>You have successfully updated Lisa Williams's contact information.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -492,6 +621,66 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Medical History Section -->
+                    <div class="mt-8">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Patient Medical History</h3>
+                        <div class="info-card space-y-4">
+                            <div>
+                                <p class="font-semibold text-gray-700">Allergies:</p>
+                                <ul class="list-disc list-inside text-gray-600">
+                                    <li>Penicillin</li>
+                                    <li>Latex</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-gray-700">Past Medical History:</p>
+                                <ul class="list-disc list-inside text-gray-600">
+                                    <li>Type 2 Diabetes (Diagnosed 2018)</li>
+                                    <li>Hypertension</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-gray-700">Surgical History:</p>
+                                <p class="text-gray-600">Appendectomy (2005)</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Document History Assignment -->
+                    <div class="assignment-panel rounded-lg mt-8">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Assignment: Document Medical History</h3>
+                        <p class="text-gray-600 mb-6">A new patient, **John Smith**, has a history of **seasonal allergies** and a past history of a **broken arm** (fracture). Your task is to accurately document this in his chart.</p>
+                        <button id="start-document-history" class="bg-green-600 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-green-700 transition duration-300">Start Assignment</button>
+                        <div id="document-history-assignment-form" class="mt-8 hidden">
+                            <form id="document-history-form" class="space-y-4">
+                                <div>
+                                    <label for="allergies-select" class="block text-sm font-medium text-gray-700">Allergies</label>
+                                    <select id="allergies-select" name="allergies-select" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" required>
+                                        <option value="">Select allergy...</option>
+                                        <option value="seasonal-allergies">Seasonal Allergies</option>
+                                        <option value="penicillin">Penicillin</option>
+                                        <option value="none">None</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="history-select" class="block text-sm font-medium text-gray-700">Past Medical History</label>
+                                    <select id="history-select" name="history-select" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" required>
+                                        <option value="">Select history...</option>
+                                        <option value="broken-arm">Broken Arm (Fracture)</option>
+                                        <option value="hypertension">Hypertension</option>
+                                        <option value="none">None</option>
+                                    </select>
+                                </div>
+                                <div id="document-history-form-error" class="text-red-500 font-medium hidden"></div>
+                                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg hover:bg-blue-700 transition duration-300">Save History</button>
+                            </form>
+                            <div id="document-history-success-message" class="form-feedback hidden mt-6 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 rounded-md">
+                                <p class="font-bold">Assignment Complete!</p>
+                                <p>You have successfully documented the patient's medical history. Great job!</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -536,10 +725,34 @@
         <div id="billing-content" class="tab-content">
             <div class="bg-white p-6 md:p-8 rounded-xl shadow-md">
                 <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-6">Billing & Coding</h2>
-                <p class="text-lg text-gray-600">This module focuses on the financial side of the medical office. You'll learn to create invoices, submit claims to insurance providers, and use medical codes like ICD-10 and CPT.</p>
-                <div class="bg-gray-50 p-4 rounded-lg mt-6">
-                    <h3 class="text-xl font-bold text-gray-800 mb-2">Billing Dashboard</h3>
-                    <p class="text-gray-700">This area would typically display a summary of outstanding claims, pending payments, and a list of recently billed encounters. You would practice creating claims for completed patient visits here.</p>
+                <p class="text-lg text-gray-600">This module focuses on the financial side of the medical office. You'll learn to create invoices, submit claims to insurance providers, and use medical codes like **ICD-10** and **CPT**.</p>
+                <div class="assignment-panel rounded-lg mt-6">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Assignment: Submit a Medical Claim</h3>
+                    <p class="text-gray-600 mb-6">For patient **Michael Rodriguez**, who was seen for abdominal pain, you need to submit a claim for insurance. The doctor diagnosed him with **acute appendicitis**.
+                        <ul class="list-disc list-inside mt-2">
+                            <li>Diagnosis Code (ICD-10): **K35.80**</li>
+                            <li>Procedure Code (CPT): **99213**</li>
+                        </ul>
+                    </p>
+                    <button id="start-billing-assignment" class="bg-green-600 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-green-700 transition duration-300">Start Billing Assignment</button>
+                    <div id="billing-assignment-form" class="mt-8 hidden">
+                        <form id="billing-coding-form" class="space-y-4">
+                            <div>
+                                <label for="icd-10-code" class="block text-sm font-medium text-gray-700">ICD-10 Diagnosis Code</label>
+                                <input type="text" id="icd-10-code" name="icd-10-code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" required>
+                            </div>
+                            <div>
+                                <label for="cpt-code" class="block text-sm font-medium text-gray-700">CPT Procedure Code</label>
+                                <input type="text" id="cpt-code" name="cpt-code" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" required>
+                            </div>
+                            <div id="billing-form-error" class="text-red-500 font-medium hidden"></div>
+                            <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg hover:bg-blue-700 transition duration-300">Submit Claim</button>
+                        </form>
+                        <div id="billing-success-message" class="form-feedback hidden mt-6 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 rounded-md">
+                            <p class="font-bold">Assignment Complete!</p>
+                            <p>The medical claim has been successfully submitted to insurance. The diagnosis and procedure codes have been recorded.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
