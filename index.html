@@ -159,8 +159,10 @@
                 };
                 await setDoc(progressDocRef, updateData, { merge: true });
                 console.log(`Assignment '${assignmentId}' saved successfully.`);
+                return true;
             } catch (e) {
                 console.error("Error saving document:", e);
+                return false;
             }
         };
 
@@ -314,12 +316,13 @@
             });
 
             // --- ALL FORM SUBMISSION HANDLERS ---
-            // These functions are now async to ensure the Firestore write completes
-            // before the success message is shown.
+            // These functions now provide immediate visual feedback and then handle the database save.
 
             // Handle Patient Intake Form
             document.getElementById('start-intake-assignment').addEventListener('click', () => {
                 document.getElementById('patient-intake-assignment-form').classList.remove('hidden');
+                document.getElementById('intake-success-message').classList.add('hidden');
+                document.getElementById('intake-form-error').classList.add('hidden');
             });
             document.getElementById('intake-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -331,12 +334,21 @@
                     intakeErrorMessage.classList.remove('hidden');
                     return;
                 }
-                await saveAssignmentCompletion('patient-intake-form');
+                const success = await saveAssignmentCompletion('patient-intake-form');
+                if (success) {
+                    document.getElementById('patient-intake-assignment-form').classList.add('hidden');
+                    document.getElementById('intake-success-message').classList.remove('hidden');
+                } else {
+                    intakeErrorMessage.textContent = 'Failed to submit. Please try again.';
+                    intakeErrorMessage.classList.remove('hidden');
+                }
             });
 
             // Handle Vital Signs Form
             document.getElementById('start-vitals-assignment').addEventListener('click', () => {
                 document.getElementById('vitals-assignment-form').classList.remove('hidden');
+                document.getElementById('vitals-success-message').classList.add('hidden');
+                document.getElementById('vitals-form-error').classList.add('hidden');
             });
             document.getElementById('vitals-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -350,12 +362,21 @@
                     vitalsErrorMessage.classList.remove('hidden');
                     return;
                 }
-                await saveAssignmentCompletion('vital-signs-form');
+                const success = await saveAssignmentCompletion('vital-signs-form');
+                if (success) {
+                    document.getElementById('vitals-assignment-form').classList.add('hidden');
+                    document.getElementById('vitals-success-message').classList.remove('hidden');
+                } else {
+                    vitalsErrorMessage.textContent = 'Failed to submit. Please try again.';
+                    vitalsErrorMessage.classList.remove('hidden');
+                }
             });
 
             // Handle Scheduling Form
             document.getElementById('start-scheduling-assignment').addEventListener('click', () => {
                 document.getElementById('scheduling-assignment-form').classList.remove('hidden');
+                document.getElementById('scheduling-success-message').classList.add('hidden');
+                document.getElementById('scheduling-form-error').classList.add('hidden');
             });
             document.getElementById('scheduling-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -378,7 +399,13 @@
                         time: appointmentTime,
                         createdAt: new Date()
                     });
-                    await saveAssignmentCompletion('patient-scheduling-form');
+                    const success = await saveAssignmentCompletion('patient-scheduling-form');
+                    if (success) {
+                         document.getElementById('scheduling-assignment-form').classList.add('hidden');
+                         document.getElementById('scheduling-success-message').classList.remove('hidden');
+                    } else {
+                        throw new Error("Failed to save assignment completion status.");
+                    }
                 } catch (error) {
                     console.error("Error scheduling appointment:", error);
                     schedulingErrorMessage.textContent = 'Failed to schedule appointment. Please try again.';
@@ -389,6 +416,8 @@
             // Handle Lab Order Form
             document.getElementById('start-lab-order-assignment').addEventListener('click', () => {
                 document.getElementById('lab-order-assignment-form').classList.remove('hidden');
+                document.getElementById('lab-order-success-message').classList.add('hidden');
+                document.getElementById('lab-order-form-error').classList.add('hidden');
             });
             document.getElementById('lab-order-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -399,12 +428,21 @@
                     labOrderErrorMessage.classList.remove('hidden');
                     return;
                 }
-                await saveAssignmentCompletion('lab-order-form');
+                const success = await saveAssignmentCompletion('lab-order-form');
+                if (success) {
+                    document.getElementById('lab-order-assignment-form').classList.add('hidden');
+                    document.getElementById('lab-order-success-message').classList.remove('hidden');
+                } else {
+                    labOrderErrorMessage.textContent = 'Failed to submit. Please try again.';
+                    labOrderErrorMessage.classList.remove('hidden');
+                }
             });
 
             // Handle Update Demographics Form
             document.getElementById('start-update-demographics').addEventListener('click', () => {
                 document.getElementById('update-demographics-assignment-form').classList.remove('hidden');
+                document.getElementById('update-demographics-success-message').classList.add('hidden');
+                document.getElementById('update-demographics-form-error').classList.add('hidden');
             });
             document.getElementById('update-demographics-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -416,12 +454,21 @@
                     updateDemographicsErrorMessage.classList.remove('hidden');
                     return;
                 }
-                await saveAssignmentCompletion('update-demographics-form');
+                const success = await saveAssignmentCompletion('update-demographics-form');
+                if (success) {
+                    document.getElementById('update-demographics-assignment-form').classList.add('hidden');
+                    document.getElementById('update-demographics-success-message').classList.remove('hidden');
+                } else {
+                    updateDemographicsErrorMessage.textContent = 'Failed to submit. Please try again.';
+                    updateDemographicsErrorMessage.classList.remove('hidden');
+                }
             });
 
             // Handle Document History Form
             document.getElementById('start-document-history').addEventListener('click', () => {
                 document.getElementById('document-history-assignment-form').classList.remove('hidden');
+                document.getElementById('document-history-success-message').classList.add('hidden');
+                document.getElementById('document-history-form-error').classList.add('hidden');
             });
             document.getElementById('document-history-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -433,12 +480,21 @@
                     documentHistoryErrorMessage.classList.remove('hidden');
                     return;
                 }
-                await saveAssignmentCompletion('document-history-form');
+                const success = await saveAssignmentCompletion('document-history-form');
+                if (success) {
+                    document.getElementById('document-history-assignment-form').classList.add('hidden');
+                    document.getElementById('document-history-success-message').classList.remove('hidden');
+                } else {
+                    documentHistoryErrorMessage.textContent = 'Failed to submit. Please try again.';
+                    documentHistoryErrorMessage.classList.remove('hidden');
+                }
             });
             
             // Handle Billing & Coding Form
             document.getElementById('start-billing-assignment').addEventListener('click', () => {
                 document.getElementById('billing-assignment-form').classList.remove('hidden');
+                document.getElementById('billing-success-message').classList.add('hidden');
+                document.getElementById('billing-form-error').classList.add('hidden');
             });
 
             document.getElementById('billing-coding-form').addEventListener('submit', async (e) => {
@@ -451,7 +507,14 @@
                     billingErrorMessage.classList.remove('hidden');
                     return;
                 }
-                await saveAssignmentCompletion('billing-coding-assignment');
+                const success = await saveAssignmentCompletion('billing-coding-assignment');
+                if (success) {
+                    document.getElementById('billing-assignment-form').classList.add('hidden');
+                    document.getElementById('billing-success-message').classList.remove('hidden');
+                } else {
+                    billingErrorMessage.textContent = 'Failed to submit. Please try again.';
+                    billingErrorMessage.classList.remove('hidden');
+                }
             });
 
             // Simple search functionality for Patient Management
