@@ -15,9 +15,27 @@
             width: 280px;
             background-color: #1a202c;
             color: white;
+            transition: transform 0.3s ease-in-out;
+            transform: translateX(0);
         }
         .main-content {
             flex-grow: 1;
+            transition: margin-left 0.3s ease-in-out;
+            margin-left: 280px;
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                position: fixed;
+                height: 100%;
+                z-index: 50;
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+            }
         }
         .card {
             border-radius: 12px;
@@ -68,26 +86,52 @@
             background-color: #e5e7eb;
             font-weight: 500;
         }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background-color: #e5e7eb;
+        }
+        .calendar-day {
+            background-color: white;
+            min-height: 100px;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        .drag-target {
+            border: 2px dashed #9ca3af;
+            min-height: 100px;
+            border-radius: 8px;
+            padding: 1rem;
+            transition: background-color 0.2s;
+        }
+        .drag-target.drag-over {
+            background-color: #d1d5db;
+        }
     </style>
 </head>
 <body class="flex min-h-screen">
-    <div class="sidebar p-6 flex flex-col items-center">
+    <div id="sidebar" class="sidebar p-6 flex flex-col items-center">
         <h2 class="text-2xl font-bold mb-8">MedEHR Training</h2>
         <nav class="w-full">
             <ul class="space-y-4">
-                <li><a href="#" class="block py-2 px-4 rounded-lg text-white font-medium bg-gray-700/50" onclick="showDashboard()">Dashboard</a></li>
-                <li><a href="#" class="block py-2 px-4 rounded-lg text-gray-300 hover:bg-gray-700/50 transition-colors" onclick="showModule('patient-registration')">Patient Registration</a></li>
-                <li><a href="#" class="block py-2 px-4 rounded-lg text-gray-300 hover:bg-gray-700/50 transition-colors" onclick="showModule('interactive-calendar')">Interactive Calendar</a></li>
-                <li><a href="#" class="block py-2 px-4 rounded-lg text-gray-300 hover:bg-gray-700/50 transition-colors" onclick="showModule('coding-quiz')">Medical Coding Quiz</a></li>
-                <li><a href="#" class="block py-2 px-4 rounded-lg text-gray-300 hover:bg-gray-700/50 transition-colors" onclick="showModule('soap-notes')">SOAP Notes</a></li>
-                <li><a href="#" class="block py-2 px-4 rounded-lg text-gray-300 hover:bg-gray-700/50 transition-colors" onclick="showModule('denial-management')">Denial Management</a></li>
-                <li><a href="#" class="block py-2 px-4 rounded-lg text-gray-300 hover:bg-gray-700/50 transition-colors" onclick="showModule('prior-authorization')">Prior Authorization</a></li>
-                <li><a href="#" class="block py-2 px-4 rounded-lg text-gray-300 hover:bg-gray-700/50 transition-colors" onclick="showModule('ar-aging')">A/R Aging</a></li>
-                <li><a href="#" class="block py-2 px-4 rounded-lg text-gray-300 hover:bg-gray-700/50 transition-colors" onclick="showModule('e-prescribing')">E-Prescribing</a></li>
-                <li><a href="#" class="block py-2 px-4 rounded-lg text-gray-300 hover:bg-gray-700/50 transition-colors" onclick="showModule('patient-data')">Patient Data</a></li>
-                <li><a href="#" class="block py-2 px-4 rounded-lg text-gray-300 hover:bg-gray-700/50 transition-colors" onclick="showModule('vitals')">Vitals</a></li>
+                <li><a href="#" class="block py-2 px-4 rounded-lg text-white font-medium bg-gray-700/50" onclick="renderModule('dashboard')">Dashboard</a></li>
+                <li><a href="#" class="block py-2 px-4 rounded-lg text-gray-300 hover:bg-gray-700/50 transition-colors" onclick="renderModule('patient-registration')">Patient Registration</a></li>
+                <li><a href="#" class="block py-2 px-4 rounded-lg text-gray-300 hover:bg-gray-700/50 transition-colors" onclick="renderModule('interactive-calendar')">Interactive Calendar</a></li>
+                <li><a href="#" class="block py-2 px-4 rounded-lg text-gray-300 hover:bg-gray-700/50 transition-colors" onclick="renderModule('coding-quiz')">Medical Coding Quiz</a></li>
+                <li><a href="#" class="block py-2 px-4 rounded-lg text-gray-300 hover:bg-gray-700/50 transition-colors" onclick="renderModule('soap-notes')">SOAP Notes</a></li>
+                <li><a href="#" class="block py-2 px-4 rounded-lg text-gray-300 hover:bg-gray-700/50 transition-colors" onclick="renderModule('denial-management')">Denial Management</a></li>
+                <li><a href="#" class="block py-2 px-4 rounded-lg text-gray-300 hover:bg-gray-700/50 transition-colors" onclick="renderModule('prior-authorization')">Prior Authorization</a></li>
+                <li><a href="#" class="block py-2 px-4 rounded-lg text-gray-300 hover:bg-gray-700/50 transition-colors" onclick="renderModule('ar-aging')">A/R Aging</a></li>
+                <li><a href="#" class="block py-2 px-4 rounded-lg text-gray-300 hover:bg-gray-700/50 transition-colors" onclick="renderModule('e-prescribing')">E-Prescribing</a></li>
+                <li><a href="#" class="block py-2 px-4 rounded-lg text-gray-300 hover:bg-gray-700/50 transition-colors" onclick="renderModule('patient-data')">Patient Data</a></li>
+                <li><a href="#" class="block py-2 px-4 rounded-lg text-gray-300 hover:bg-gray-700/50 transition-colors" onclick="renderModule('vitals')">Vitals</a></li>
             </ul>
         </nav>
+        <!-- Mobile menu toggle -->
+        <button id="mobile-menu-toggle" class="md:hidden fixed top-4 left-4 p-2 rounded-full bg-gray-800 text-white z-50">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+        </button>
     </div>
 
     <div class="main-content p-8">
@@ -100,429 +144,15 @@
         </header>
         
         <main id="content-area">
-            <!-- Dashboard content -->
-            <div id="dashboard" class="page-content space-y-8">
-                <h2 class="text-2xl font-semibold mb-6 text-gray-700">My Progress</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- Cards for each module -->
-                    <div class="card bg-white p-6">
-                        <h3 class="text-lg font-bold text-gray-800 mb-2">Patient Registration</h3>
-                        <p class="text-gray-600 mb-4">Complete a full patient intake.</p>
-                        <div class="bg-gray-200 rounded-full progress-bar">
-                            <div id="pr-progress" class="bg-blue-500 rounded-full progress-bar transition-all" style="width: 0%;"></div>
-                        </div>
-                        <p id="pr-status" class="text-sm text-gray-500 mt-2">0/5 steps complete</p>
-                        <button onclick="showModule('patient-registration')" class="mt-4 px-4 py-2 text-sm rounded-full font-semibold btn-primary text-white">Start</button>
-                    </div>
-                    <div class="card bg-white p-6">
-                        <h3 class="text-lg font-bold text-gray-800 mb-2">Interactive Calendar</h3>
-                        <p class="text-gray-600 mb-4">Master appointment scheduling.</p>
-                        <div class="bg-gray-200 rounded-full progress-bar">
-                            <div id="ic-progress" class="bg-blue-500 rounded-full progress-bar transition-all" style="width: 0%;"></div>
-                        </div>
-                        <p id="ic-status" class="text-sm text-gray-500 mt-2">0/3 steps complete</p>
-                        <button onclick="showModule('interactive-calendar')" class="mt-4 px-4 py-2 text-sm rounded-full font-semibold btn-primary text-white">Start</button>
-                    </div>
-                    <div class="card bg-white p-6">
-                        <h3 class="text-lg font-bold text-gray-800 mb-2">Medical Coding Quiz</h3>
-                        <p class="text-gray-600 mb-4">Test your knowledge of codes.</p>
-                        <div class="bg-gray-200 rounded-full progress-bar">
-                            <div id="cq-progress" class="bg-blue-500 rounded-full progress-bar transition-all" style="width: 0%;"></div>
-                        </div>
-                        <p id="cq-status" class="text-sm text-gray-500 mt-2">0/1 quiz complete</p>
-                        <button onclick="showModule('coding-quiz')" class="mt-4 px-4 py-2 text-sm rounded-full font-semibold btn-primary text-white">Start</button>
-                    </div>
-                    <div class="card bg-white p-6">
-                        <h3 class="text-lg font-bold text-gray-800 mb-2">SOAP Notes</h3>
-                        <p class="text-gray-600 mb-4">Practice creating a clinical note.</p>
-                        <div class="bg-gray-200 rounded-full progress-bar">
-                            <div id="sn-progress" class="bg-blue-500 rounded-full progress-bar transition-all" style="width: 0%;"></div>
-                        </div>
-                        <p id="sn-status" class="text-sm text-gray-500 mt-2">0/4 steps complete</p>
-                        <button onclick="showModule('soap-notes')" class="mt-4 px-4 py-2 text-sm rounded-full font-semibold btn-primary text-white">Start</button>
-                    </div>
-                    <div class="card bg-white p-6">
-                        <h3 class="text-lg font-bold text-gray-800 mb-2">Denial Management</h3>
-                        <p class="text-gray-600 mb-4">Resolve a denied insurance claim.</p>
-                        <div class="bg-gray-200 rounded-full progress-bar">
-                            <div id="dm-progress" class="bg-blue-500 rounded-full progress-bar transition-all" style="width: 0%;"></div>
-                        </div>
-                        <p id="dm-status" class="text-sm text-gray-500 mt-2">0/1 scenario complete</p>
-                        <button onclick="showModule('denial-management')" class="mt-4 px-4 py-2 text-sm rounded-full font-semibold btn-primary text-white">Start</button>
-                    </div>
-                    <div class="card bg-white p-6">
-                        <h3 class="text-lg font-bold text-gray-800 mb-2">Prior Authorization</h3>
-                        <p class="text-gray-600 mb-4">Learn the process for service approval.</p>
-                        <div class="bg-gray-200 rounded-full progress-bar">
-                            <div id="pa-progress" class="bg-blue-500 rounded-full progress-bar transition-all" style="width: 0%;"></div>
-                        </div>
-                        <p id="pa-status" class="text-sm text-gray-500 mt-2">0/1 scenario complete</p>
-                        <button onclick="showModule('prior-authorization')" class="mt-4 px-4 py-2 text-sm rounded-full font-semibold btn-primary text-white">Start</button>
-                    </div>
-                    <div class="card bg-white p-6">
-                        <h3 class="text-lg font-bold text-gray-800 mb-2">A/R Aging</h3>
-                        <p class="text-gray-600 mb-4">Manage outstanding claims and billing.</p>
-                        <div class="bg-gray-200 rounded-full progress-bar">
-                            <div id="ar-progress" class="bg-blue-500 rounded-full progress-bar transition-all" style="width: 0%;"></div>
-                        </div>
-                        <p id="ar-status" class="text-sm text-gray-500 mt-2">0/1 scenario complete</p>
-                        <button onclick="showModule('ar-aging')" class="mt-4 px-4 py-2 text-sm rounded-full font-semibold btn-primary text-white">Start</button>
-                    </div>
-                    <div class="card bg-white p-6">
-                        <h3 class="text-lg font-bold text-gray-800 mb-2">E-Prescribing</h3>
-                        <p class="text-gray-600 mb-4">Simulate creating and sending a prescription.</p>
-                        <div class="bg-gray-200 rounded-full progress-bar">
-                            <div id="ep-progress" class="bg-blue-500 rounded-full progress-bar transition-all" style="width: 0%;"></div>
-                        </div>
-                        <p id="ep-status" class="text-sm text-gray-500 mt-2">0/1 scenario complete</p>
-                        <button onclick="showModule('e-prescribing')" class="mt-4 px-4 py-2 text-sm rounded-full font-semibold btn-primary text-white">Start</button>
-                    </div>
-                     <div class="card bg-white p-6">
-                        <h3 class="text-lg font-bold text-gray-800 mb-2">Patient Data</h3>
-                        <p class="text-gray-600 mb-4">View and manage simulated patient records.</p>
-                        <div class="bg-gray-200 rounded-full progress-bar">
-                            <div id="pd-progress" class="bg-blue-500 rounded-full progress-bar transition-all" style="width: 0%;"></div>
-                        </div>
-                        <p id="pd-status" class="text-sm text-gray-500 mt-2">0/1 scenario complete</p>
-                        <button onclick="showModule('patient-data')" class="mt-4 px-4 py-2 text-sm rounded-full font-semibold btn-primary text-white">Start</button>
-                    </div>
-                    <div class="card bg-white p-6">
-                        <h3 class="text-lg font-bold text-gray-800 mb-2">Vitals</h3>
-                        <p class="text-gray-600 mb-4">Log a patient's vital signs.</p>
-                        <div class="bg-gray-200 rounded-full progress-bar">
-                            <div id="vitals-progress" class="bg-blue-500 rounded-full progress-bar transition-all" style="width: 0%;"></div>
-                        </div>
-                        <p id="vitals-status" class="text-sm text-gray-500 mt-2">0/1 steps complete</p>
-                        <button onclick="showModule('vitals')" class="mt-4 px-4 py-2 text-sm rounded-full font-semibold btn-primary text-white">Start</button>
-                    </div>
-                </div>
-                <div class="mt-8">
-                    <button onclick="addSampleData()" class="px-6 py-3 bg-gray-600 text-white font-medium rounded-full shadow-md hover:bg-gray-700 transition-colors">Add Sample Data</button>
-                </div>
-            </div>
-
-            <!-- Modules Container -->
-            <div id="modules-container" class="page-content hidden">
-                <!-- Patient Registration Module -->
-                <div id="patient-registration" class="hidden">
-                    <h2 class="text-2xl font-bold mb-4">Patient Registration</h2>
-                    <p class="text-gray-600 mb-4">Follow the steps to complete a full patient intake.</p>
-                    <div class="bg-gray-200 rounded-full progress-bar mb-4">
-                        <div id="pr-module-progress" class="bg-blue-500 rounded-full progress-bar transition-all" style="width: 0%;"></div>
-                    </div>
-                    <form id="pr-form" class="space-y-4 bg-white p-6 rounded-lg shadow-md">
-                        <div class="input-group" data-step="1">
-                            <label>Patient Demographics</label>
-                            <input type="text" placeholder="Full Name" name="name" class="rounded-lg p-2 w-full" required>
-                        </div>
-                        <div class="input-group" data-step="2" style="display: none;">
-                            <label>Contact Information</label>
-                            <input type="email" placeholder="Email Address" name="email" class="rounded-lg p-2 w-full" required>
-                        </div>
-                        <div class="input-group" data-step="3" style="display: none;">
-                            <label>Insurance Provider</label>
-                            <input type="text" placeholder="Insurance Company" name="insurance" class="rounded-lg p-2 w-full" required>
-                        </div>
-                        <div class="input-group" data-step="4" style="display: none;">
-                            <label>Chief Complaint</label>
-                            <textarea placeholder="Describe the reason for the visit" name="complaint" rows="3" class="rounded-lg p-2 w-full" required></textarea>
-                        </div>
-                        <div class="input-group" data-step="5" style="display: none;">
-                            <label>Medical History</label>
-                            <textarea placeholder="List allergies, past surgeries, and medications" name="history" rows="3" class="rounded-lg p-2 w-full" required></textarea>
-                        </div>
-                        <button type="button" id="pr-next-btn" class="px-6 py-3 bg-blue-600 text-white font-medium rounded-full shadow-md hover:bg-blue-700 transition-colors">Next</button>
-                    </form>
-                    <div id="pr-success" class="bg-green-100 text-green-700 p-4 rounded-lg mt-4 hidden">
-                        <p>Patient registration complete! Great job.</p>
-                        <button onclick="showDashboard()" class="mt-4 text-sm font-semibold text-blue-600 hover:underline">Return to Dashboard</button>
-                    </div>
-                </div>
-
-                <!-- Interactive Calendar Module -->
-                <div id="interactive-calendar" class="hidden">
-                    <h2 class="text-2xl font-bold mb-4">Interactive Calendar</h2>
-                    <p class="text-gray-600 mb-4">Follow the steps to schedule a new appointment.</p>
-                    <div class="bg-gray-200 rounded-full progress-bar mb-4">
-                        <div id="ic-module-progress" class="bg-blue-500 rounded-full progress-bar transition-all" style="width: 0%;"></div>
-                    </div>
-                    <form id="ic-form" class="space-y-4 bg-white p-6 rounded-lg shadow-md">
-                        <div class="input-group" data-step="1">
-                            <label>Select Patient</label>
-                            <input type="text" placeholder="Patient Name" name="patient-name" class="rounded-lg p-2 w-full" required>
-                        </div>
-                        <div class="input-group" data-step="2" style="display: none;">
-                            <label>Select Date and Time</label>
-                            <input type="datetime-local" name="appointment-time" class="rounded-lg p-2 w-full" required>
-                        </div>
-                        <div class="input-group" data-step="3" style="display: none;">
-                            <label>Reason for Visit</label>
-                            <textarea placeholder="Reason for the appointment" name="reason" rows="3" class="rounded-lg p-2 w-full" required></textarea>
-                        </div>
-                        <button type="button" id="ic-next-btn" class="px-6 py-3 bg-blue-600 text-white font-medium rounded-full shadow-md hover:bg-blue-700 transition-colors">Next</button>
-                    </form>
-                    <div id="ic-success" class="bg-green-100 text-green-700 p-4 rounded-lg mt-4 hidden">
-                        <p>Appointment scheduled! Great job.</p>
-                        <button onclick="showDashboard()" class="mt-4 text-sm font-semibold text-blue-600 hover:underline">Return to Dashboard</button>
-                    </div>
-                </div>
-
-                <!-- Medical Coding Quiz Module -->
-                <div id="coding-quiz" class="hidden">
-                    <h2 class="text-2xl font-bold mb-4">Medical Coding Quiz</h2>
-                    <p class="text-gray-600 mb-4">Test your knowledge of common medical codes.</p>
-                    <div class="bg-gray-200 rounded-full progress-bar mb-4">
-                        <div id="cq-module-progress" class="bg-blue-500 rounded-full progress-bar transition-all" style="width: 0%;"></div>
-                    </div>
-                    <div class="bg-white p-6 rounded-lg shadow-md">
-                        <p id="cq-question" class="text-lg font-bold mb-4">Question loading...</p>
-                        <div id="cq-options" class="space-y-2"></div>
-                        <div id="cq-feedback" class="mt-4 text-sm font-medium"></div>
-                        <div id="cq-results" class="hidden mt-4 text-center">
-                            <p id="cq-score-text" class="text-xl font-bold mb-2"></p>
-                            <button id="cq-restart-btn" class="px-4 py-2 text-sm rounded-full font-semibold btn-primary text-white">Restart Quiz</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- SOAP Notes Module -->
-                <div id="soap-notes" class="hidden">
-                    <h2 class="text-2xl font-bold mb-4">SOAP Notes</h2>
-                    <p class="text-gray-600 mb-4">Practice creating a complete clinical note.</p>
-                    <div class="bg-gray-200 rounded-full progress-bar mb-4">
-                        <div id="sn-module-progress" class="bg-blue-500 rounded-full progress-bar transition-all" style="width: 0%;"></div>
-                    </div>
-                    <form id="sn-form" class="space-y-4 bg-white p-6 rounded-lg shadow-md">
-                        <div class="input-group" data-step="1">
-                            <label>S - Subjective</label>
-                            <textarea placeholder="Patient's reported symptoms and feelings" name="subjective" rows="3" class="rounded-lg p-2 w-full" required></textarea>
-                        </div>
-                        <div class="input-group" data-step="2" style="display: none;">
-                            <label>O - Objective</label>
-                            <textarea placeholder="Provider's observations (vitals, test results)" name="objective" rows="3" class="rounded-lg p-2 w-full" required></textarea>
-                        </div>
-                        <div class="input-group" data-step="3" style="display: none;">
-                            <label>A - Assessment</label>
-                            <textarea placeholder="Diagnosis based on subjective and objective findings" name="assessment" rows="3" class="rounded-lg p-2 w-full" required></textarea>
-                        </div>
-                        <div class="input-group" data-step="4" style="display: none;">
-                            <label>P - Plan</label>
-                            <textarea placeholder="Treatment plan, next steps, follow-up instructions" name="plan" rows="3" class="rounded-lg p-2 w-full" required></textarea>
-                        </div>
-                        <button type="button" id="sn-next-btn" class="px-6 py-3 bg-blue-600 text-white font-medium rounded-full shadow-md hover:bg-blue-700 transition-colors">Next</button>
-                    </form>
-                    <div id="sn-success" class="bg-green-100 text-green-700 p-4 rounded-lg mt-4 hidden">
-                        <p>SOAP note complete! You've successfully documented a patient's visit.</p>
-                        <button onclick="showDashboard()" class="mt-4 text-sm font-semibold text-blue-600 hover:underline">Return to Dashboard</button>
-                    </div>
-                </div>
-
-                <!-- Denial Management Module -->
-                <div id="denial-management" class="hidden">
-                    <h2 class="text-2xl font-bold mb-4">Denial Management</h2>
-                    <p class="text-gray-600 mb-4">Learn how to analyze and resolve a denied claim.</p>
-                    <div class="bg-gray-200 rounded-full progress-bar mb-4">
-                        <div id="dm-module-progress" class="bg-blue-500 rounded-full progress-bar transition-all" style="width: 0%;"></div>
-                    </div>
-                    <form id="dm-form" class="space-y-4 bg-white p-6 rounded-lg shadow-md">
-                        <div class="input-group" data-step="1">
-                            <label>Scenario</label>
-                            <p class="text-sm text-gray-700 mb-2">Claim ID: 456789. Patient: Jane Doe. Service: X-Ray. Denial Reason: "Not Medically Necessary".</p>
-                            <label>What is the most likely first step to appeal this denial?</label>
-                            <select name="dm-answer" class="rounded-lg p-2 w-full" required>
-                                <option value="">Select an option</option>
-                                <option value="a">Write off the claim and bill the patient.</option>
-                                <option value="b">Submit a corrected claim with supporting documentation.</option>
-                                <option value="c">Send the claim to a collection agency.</option>
-                            </select>
-                        </div>
-                        <button type="button" id="dm-next-btn" class="px-6 py-3 bg-blue-600 text-white font-medium rounded-full shadow-md hover:bg-blue-700 transition-colors">Submit</button>
-                    </form>
-                    <div id="dm-success" class="bg-green-100 text-green-700 p-4 rounded-lg mt-4 hidden">
-                        <p>Scenario complete! Correct. You should submit a corrected claim with documentation to show the medical necessity.</p>
-                        <button onclick="showDashboard()" class="mt-4 text-sm font-semibold text-blue-600 hover:underline">Return to Dashboard</button>
-                    </div>
-                </div>
-
-                <!-- Prior Authorization Module -->
-                <div id="prior-authorization" class="hidden">
-                    <h2 class="text-2xl font-bold mb-4">Prior Authorization</h2>
-                    <p class="text-gray-600 mb-4">Learn the process of obtaining prior authorization for a service.</p>
-                    <div class="bg-gray-200 rounded-full progress-bar mb-4">
-                        <div id="pa-module-progress" class="bg-blue-500 rounded-full progress-bar transition-all" style="width: 0%;"></div>
-                    </div>
-                    <form id="pa-form" class="space-y-4 bg-white p-6 rounded-lg shadow-md">
-                        <div class="input-group" data-step="1">
-                            <label>Scenario</label>
-                            <p class="text-sm text-gray-700 mb-2">Patient: John Smith. Insurance: BlueCross. Service: MRI. The insurance policy states an MRI requires prior authorization.</p>
-                            <label>What is the first step you should take?</label>
-                            <select name="pa-answer" class="rounded-lg p-2 w-full" required>
-                                <option value="">Select an option</option>
-                                <option value="a">Tell the patient they cannot get the MRI.</option>
-                                <option value="b">Call the insurance company and provide the patient's information and medical necessity.</option>
-                                <option value="c">Schedule the MRI without contacting the insurance company.</option>
-                            </select>
-                        </div>
-                        <button type="button" id="pa-next-btn" class="px-6 py-3 bg-blue-600 text-white font-medium rounded-full shadow-md hover:bg-blue-700 transition-colors">Submit</button>
-                    </form>
-                    <div id="pa-success" class="bg-green-100 text-green-700 p-4 rounded-lg mt-4 hidden">
-                        <p>Scenario complete! Correct. You must contact the insurance provider to get authorization before the service is rendered.</p>
-                        <button onclick="showDashboard()" class="mt-4 text-sm font-semibold text-blue-600 hover:underline">Return to Dashboard</button>
-                    </div>
-                </div>
-
-                <!-- A/R Aging Module -->
-                <div id="ar-aging" class="hidden">
-                    <h2 class="text-2xl font-bold mb-4">A/R Aging</h2>
-                    <p class="text-gray-600 mb-4">Manage outstanding claims from an A/R aging report.</p>
-                    <div class="bg-gray-200 rounded-full progress-bar mb-4">
-                        <div id="ar-module-progress" class="bg-blue-500 rounded-full progress-bar transition-all" style="width: 0%;"></div>
-                    </div>
-                    <form id="ar-form" class="space-y-4 bg-white p-6 rounded-lg shadow-md">
-                        <div class="input-group" data-step="1">
-                            <label>Scenario</label>
-                            <p class="text-sm text-gray-700 mb-2">You have an A/R aging report. Claims are grouped by how long they have been outstanding.
-                                <ul>
-                                    <li>Claim A: 90+ days old</li>
-                                    <li>Claim B: 1-30 days old</li>
-                                    <li>Claim C: 31-60 days old</li>
-                                </ul>
-                            </p>
-                            <label>Which claim should you follow up on first?</label>
-                            <select name="ar-answer" class="rounded-lg p-2 w-full" required>
-                                <option value="">Select an option</option>
-                                <option value="a">Claim A</option>
-                                <option value="b">Claim B</option>
-                                <option value="c">Claim C</option>
-                            </select>
-                        </div>
-                        <button type="button" id="ar-next-btn" class="px-6 py-3 bg-blue-600 text-white font-medium rounded-full shadow-md hover:bg-blue-700 transition-colors">Submit</button>
-                    </form>
-                    <div id="ar-success" class="bg-green-100 text-green-700 p-4 rounded-lg mt-4 hidden">
-                        <p>Scenario complete! Correct. Older claims should be addressed first as they are at higher risk of non-payment.</p>
-                        <button onclick="showDashboard()" class="mt-4 text-sm font-semibold text-blue-600 hover:underline">Return to Dashboard</button>
-                    </div>
-                </div>
-
-                <!-- E-Prescribing Module -->
-                <div id="e-prescribing" class="hidden">
-                    <h2 class="text-2xl font-bold mb-4">E-Prescribing</h2>
-                    <p class="text-gray-600 mb-4">Simulate the process of creating and sending a prescription.</p>
-                    <div class="bg-gray-200 rounded-full progress-bar mb-4">
-                        <div id="ep-module-progress" class="bg-blue-500 rounded-full progress-bar transition-all" style="width: 0%;"></div>
-                    </div>
-                    <form id="ep-form" class="space-y-4 bg-white p-6 rounded-lg shadow-md">
-                        <div class="input-group" data-step="1">
-                            <label>Select Patient</label>
-                            <select id="ep-patient-select" class="rounded-lg p-2 w-full" required>
-                                <option value="">-- Select a patient --</option>
-                            </select>
-                        </div>
-                        <div class="input-group" data-step="2" style="display: none;">
-                            <label>Medication Order</label>
-                            <input type="text" placeholder="Medication Name" name="medication" class="rounded-lg p-2 w-full" required>
-                            <input type="text" placeholder="Dosage (e.g., 500mg)" name="dosage" class="rounded-lg p-2 w-full mt-2" required>
-                        </div>
-                        <div class="input-group" data-step="3" style="display: none;">
-                            <label>Pharmacy Information</label>
-                            <input type="text" placeholder="Pharmacy Name" name="pharmacy" class="rounded-lg p-2 w-full" required>
-                        </div>
-                        <button type="button" id="ep-next-btn" class="px-6 py-3 bg-blue-600 text-white font-medium rounded-full shadow-md hover:bg-blue-700 transition-colors">Next</button>
-                    </form>
-                    <div id="ep-success" class="bg-green-100 text-green-700 p-4 rounded-lg mt-4 hidden">
-                        <p>Scenario complete! Prescription successfully prepared for electronic transmission.</p>
-                        <button onclick="showDashboard()" class="mt-4 text-sm font-semibold text-blue-600 hover:underline">Return to Dashboard</button>
-                    </div>
-                </div>
-
-                <!-- Patient Data Module -->
-                <div id="patient-data" class="hidden">
-                    <div class="flex flex-col lg:flex-row gap-6">
-                        <div class="lg:w-1/3 bg-white p-6 rounded-lg shadow-md">
-                            <div class="flex justify-between items-center mb-4">
-                                <h2 class="text-2xl font-bold">Patient List</h2>
-                                <button onclick="showPatientForm()" class="px-4 py-2 text-sm rounded-full font-semibold btn-primary text-white">Add Patient</button>
-                            </div>
-                            <div id="patient-list" class="space-y-2">
-                                <!-- Patient list will be populated here -->
-                            </div>
-                        </div>
-                        <div id="patient-details-container" class="lg:w-2/3 bg-white p-6 rounded-lg shadow-md hidden">
-                            <h2 id="patient-details-name" class="text-2xl font-bold mb-4"></h2>
-                            <div class="space-y-2 text-gray-700">
-                                <p><strong>DOB:</strong> <span id="patient-details-dob"></span></p>
-                                <p><strong>Gender:</strong> <span id="patient-details-gender"></span></p>
-                                <p><strong>Medical History:</strong> <span id="patient-details-history"></span></p>
-                            </div>
-                        </div>
-                        <form id="add-patient-form" class="lg:w-2/3 bg-white p-6 rounded-lg shadow-md hidden">
-                            <h2 class="text-2xl font-bold mb-4">Add New Patient</h2>
-                            <div class="input-group">
-                                <label>Full Name</label>
-                                <input type="text" name="name" class="rounded-lg p-2 w-full" required>
-                            </div>
-                            <div class="input-group">
-                                <label>Date of Birth</label>
-                                <input type="date" name="dob" class="rounded-lg p-2 w-full" required>
-                            </div>
-                            <div class="input-group">
-                                <label>Gender</label>
-                                <select name="gender" class="rounded-lg p-2 w-full" required>
-                                    <option value="">Select Gender</option>
-                                    <option value="Male">Male</option>
-                                    <option value="Female">Female</option>
-                                    <option value="Other">Other</option>
-                                </select>
-                            </div>
-                            <div class="input-group">
-                                <label>Medical History</label>
-                                <textarea name="history" rows="3" class="rounded-lg p-2 w-full" placeholder="e.g., Allergies, past surgeries"></textarea>
-                            </div>
-                            <div class="flex gap-2">
-                                <button type="submit" class="px-6 py-3 bg-blue-600 text-white font-medium rounded-full shadow-md hover:bg-blue-700 transition-colors">Save Patient</button>
-                                <button type="button" onclick="hidePatientForm()" class="px-6 py-3 bg-gray-300 text-gray-700 font-medium rounded-full shadow-md hover:bg-gray-400 transition-colors">Cancel</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Vitals Module -->
-                <div id="vitals" class="hidden">
-                    <h2 class="text-2xl font-bold mb-4">Vitals</h2>
-                    <p class="text-gray-600 mb-4">Enter a patient's vital signs and save the data.</p>
-                    <div class="bg-gray-200 rounded-full progress-bar mb-4">
-                        <div id="vitals-module-progress" class="bg-blue-500 rounded-full progress-bar transition-all" style="width: 0%;"></div>
-                    </div>
-                    <form id="vitals-form" class="space-y-4 bg-white p-6 rounded-lg shadow-md">
-                        <div class="input-group">
-                            <label>Patient Name</label>
-                            <input type="text" placeholder="Patient Name" name="patient-name" class="rounded-lg p-2 w-full" required>
-                        </div>
-                        <div class="input-group">
-                            <label>Temperature ($^{\circ}F$)</label>
-                            <input type="number" placeholder="e.g., 98.6" name="temperature" step="0.1" class="rounded-lg p-2 w-full" required>
-                        </div>
-                        <div class="input-group">
-                            <label>Blood Pressure (mmHg)</label>
-                            <input type="text" placeholder="e.g., 120/80" name="blood-pressure" class="rounded-lg p-2 w-full" required>
-                        </div>
-                        <div class="input-group">
-                            <label>Heart Rate (bpm)</label>
-                            <input type="number" placeholder="e.g., 75" name="heart-rate" class="rounded-lg p-2 w-full" required>
-                        </div>
-                        <button type="submit" class="px-6 py-3 bg-blue-600 text-white font-medium rounded-full shadow-md hover:bg-blue-700 transition-colors">Save Vitals</button>
-                    </form>
-                    <div id="vitals-success" class="bg-green-100 text-green-700 p-4 rounded-lg mt-4 hidden">
-                        <p>Vitals logged successfully!</p>
-                        <button onclick="showDashboard()" class="mt-4 text-sm font-semibold text-blue-600 hover:underline">Return to Dashboard</button>
-                    </div>
-                </div>
-            </div>
+            <!-- Content will be injected here -->
         </main>
     </div>
 
     <div id="message-box" class="fixed bottom-4 left-1/2 -translate-x-1/2 bg-red-500 text-white p-4 rounded-lg shadow-lg z-50 hidden"></div>
-
+    <div id="modal-container" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div id="modal-content" class="bg-white p-6 rounded-lg shadow-xl w-full max-w-xl"></div>
+    </div>
+    
     <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -545,89 +175,52 @@
             'patient-registration': {
                 steps: 5,
                 progressKey: 'pr-progress',
-                formId: 'pr-form',
-                statusId: 'pr-status',
-                progressEl: 'pr-module-progress',
-                nextBtnId: 'pr-next-btn',
-                successEl: 'pr-success'
+                statusId: 'pr-status'
             },
             'interactive-calendar': {
                 steps: 3,
                 progressKey: 'ic-progress',
-                formId: 'ic-form',
-                statusId: 'ic-status',
-                progressEl: 'ic-module-progress',
-                nextBtnId: 'ic-next-btn',
-                successEl: 'ic-success'
+                statusId: 'ic-status'
             },
             'coding-quiz': {
                 steps: 1, // Represents completing the quiz once
                 progressKey: 'cq-progress',
-                statusId: 'cq-status',
-                progressEl: 'cq-module-progress'
+                statusId: 'cq-status'
             },
             'soap-notes': {
                 steps: 4,
                 progressKey: 'sn-progress',
-                formId: 'sn-form',
-                statusId: 'sn-status',
-                progressEl: 'sn-module-progress',
-                nextBtnId: 'sn-next-btn',
-                successEl: 'sn-success'
+                statusId: 'sn-status'
             },
             'denial-management': {
                 steps: 1,
                 progressKey: 'dm-progress',
-                formId: 'dm-form',
-                statusId: 'dm-status',
-                progressEl: 'dm-module-progress',
-                nextBtnId: 'dm-next-btn',
-                successEl: 'dm-success',
-                answer: 'b'
+                statusId: 'dm-status'
             },
             'prior-authorization': {
                 steps: 1,
                 progressKey: 'pa-progress',
-                formId: 'pa-form',
-                statusId: 'pa-status',
-                progressEl: 'pa-module-progress',
-                nextBtnId: 'pa-next-btn',
-                successEl: 'pa-success',
-                answer: 'b'
+                statusId: 'pa-status'
             },
             'ar-aging': {
                 steps: 1,
                 progressKey: 'ar-progress',
-                formId: 'ar-form',
-                statusId: 'ar-status',
-                progressEl: 'ar-module-progress',
-                nextBtnId: 'ar-next-btn',
-                successEl: 'ar-success',
-                answer: 'a'
+                statusId: 'ar-status'
             },
             'e-prescribing': {
                 steps: 3,
                 progressKey: 'ep-progress',
-                formId: 'ep-form',
-                statusId: 'ep-status',
-                progressEl: 'ep-module-progress',
-                nextBtnId: 'ep-next-btn',
-                successEl: 'ep-success'
+                statusId: 'ep-status'
             },
             'patient-data': {
-                steps: 1, // Represents viewing a patient record
+                steps: 1,
                 progressKey: 'pd-progress',
-                statusId: 'pd-status',
-                progressEl: 'pd-module-progress'
+                statusId: 'pd-status'
             },
             'vitals': {
                 steps: 1,
                 progressKey: 'vitals-progress',
-                formId: 'vitals-form',
-                statusId: 'vitals-status',
-                progressEl: 'vitals-module-progress',
-                nextBtnId: 'vitals-next-btn',
-                successEl: 'vitals-success'
+                statusId: 'vitals-status'
             }
         };
 
@@ -644,7 +237,7 @@
                     onAuthStateChanged(auth, async (user) => {
                         if (user) {
                             userId = user.uid;
-                            document.getElementById('user-id-display').textContent = userId;
+                            document.getElementById('user-id-display').textContent = `User: ${userId}`;
                             isAuthReady = true;
                             // Set up real-time listener for user data
                             const userDocRef = doc(db, 'artifacts', appId, 'users', userId);
@@ -655,7 +248,7 @@
                                 } else {
                                     moduleProgress = {};
                                 }
-                                updateUI();
+                                updateDashboardUI();
                             }, (error) => {
                                 console.error("Error listening to document: ", error);
                                 showMessage('Error listening to progress. Please check your Firestore connection.', false);
@@ -665,8 +258,13 @@
                             onSnapshot(patientsCollection, (snapshot) => {
                                 patientList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                                 patientList.sort((a, b) => a.name.localeCompare(b.name));
-                                renderPatientList();
-                                populatePatientDropdowns();
+                                // Re-render if on a patient-data-dependent page
+                                if (document.getElementById('patient-data')) {
+                                    renderPatientData();
+                                }
+                                if (document.getElementById('e-prescribing')) {
+                                    renderEPrescribing();
+                                }
                             }, (error) => {
                                 console.error("Error listening to patients collection: ", error);
                                 showMessage('Error loading patient data. Please check your Firestore connection.', false);
@@ -715,11 +313,10 @@
                 await addDoc(patientsCollection, patient);
             }
         }
-
-        // UI Update Logic
-        function updateUI() {
+        
+        // UI Update Logic for Dashboard
+        function updateDashboardUI() {
             if (!isAuthReady) return;
-            // Update all progress bars and status text
             for (const key in modules) {
                 const module = modules[key];
                 const currentProgress = moduleProgress[key] || 0;
@@ -736,312 +333,546 @@
             }
         }
 
-        // Patient Data Module Logic
-        function renderPatientList() {
-            const listContainer = document.getElementById('patient-list');
-            listContainer.innerHTML = '';
-            patientList.forEach(patient => {
-                const item = document.createElement('div');
-                item.className = 'patient-list-item bg-gray-100 hover:bg-gray-200 transition-colors p-3 rounded-lg cursor-pointer';
-                item.textContent = patient.name;
-                item.onclick = () => showPatientDetails(patient);
-                listContainer.appendChild(item);
+        // Main Module Rendering Logic
+        const contentArea = document.getElementById('content-area');
+
+        const moduleTemplates = {
+            'dashboard': `
+                <div id="dashboard" class="page-content space-y-8">
+                    <h2 class="text-2xl font-semibold mb-6 text-gray-700">My Progress</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="card bg-white p-6">
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">Patient Registration</h3>
+                            <p class="text-gray-600 mb-4">Complete a full patient intake.</p>
+                            <div class="bg-gray-200 rounded-full progress-bar">
+                                <div id="pr-progress" class="bg-blue-500 rounded-full progress-bar transition-all"></div>
+                            </div>
+                            <p id="pr-status" class="text-sm text-gray-500 mt-2">0/5 steps complete</p>
+                            <button onclick="renderModule('patient-registration')" class="mt-4 px-4 py-2 text-sm rounded-full font-semibold btn-primary text-white">Start</button>
+                        </div>
+                        <div class="card bg-white p-6">
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">Interactive Calendar</h3>
+                            <p class="text-gray-600 mb-4">Master appointment scheduling.</p>
+                            <div class="bg-gray-200 rounded-full progress-bar">
+                                <div id="ic-progress" class="bg-blue-500 rounded-full progress-bar transition-all"></div>
+                            </div>
+                            <p id="ic-status" class="text-sm text-gray-500 mt-2">0/3 steps complete</p>
+                            <button onclick="renderModule('interactive-calendar')" class="mt-4 px-4 py-2 text-sm rounded-full font-semibold btn-primary text-white">Start</button>
+                        </div>
+                        <div class="card bg-white p-6">
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">Medical Coding Quiz</h3>
+                            <p class="text-gray-600 mb-4">Test your knowledge of codes.</p>
+                            <div class="bg-gray-200 rounded-full progress-bar">
+                                <div id="cq-progress" class="bg-blue-500 rounded-full progress-bar transition-all"></div>
+                            </div>
+                            <p id="cq-status" class="text-sm text-gray-500 mt-2">0/1 quiz complete</p>
+                            <button onclick="renderModule('coding-quiz')" class="mt-4 px-4 py-2 text-sm rounded-full font-semibold btn-primary text-white">Start</button>
+                        </div>
+                        <div class="card bg-white p-6">
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">SOAP Notes</h3>
+                            <p class="text-gray-600 mb-4">Practice creating a clinical note.</p>
+                            <div class="bg-gray-200 rounded-full progress-bar">
+                                <div id="sn-progress" class="bg-blue-500 rounded-full progress-bar transition-all"></div>
+                            </div>
+                            <p id="sn-status" class="text-sm text-gray-500 mt-2">0/4 steps complete</p>
+                            <button onclick="renderModule('soap-notes')" class="mt-4 px-4 py-2 text-sm rounded-full font-semibold btn-primary text-white">Start</button>
+                        </div>
+                        <div class="card bg-white p-6">
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">Denial Management</h3>
+                            <p class="text-gray-600 mb-4">Resolve a denied insurance claim.</p>
+                            <div class="bg-gray-200 rounded-full progress-bar">
+                                <div id="dm-progress" class="bg-blue-500 rounded-full progress-bar transition-all"></div>
+                            </div>
+                            <p id="dm-status" class="text-sm text-gray-500 mt-2">0/1 scenario complete</p>
+                            <button onclick="renderModule('denial-management')" class="mt-4 px-4 py-2 text-sm rounded-full font-semibold btn-primary text-white">Start</button>
+                        </div>
+                        <div class="card bg-white p-6">
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">Prior Authorization</h3>
+                            <p class="text-gray-600 mb-4">Learn the process for service approval.</p>
+                            <div class="bg-gray-200 rounded-full progress-bar">
+                                <div id="pa-progress" class="bg-blue-500 rounded-full progress-bar transition-all"></div>
+                            </div>
+                            <p id="pa-status" class="text-sm text-gray-500 mt-2">0/1 scenario complete</p>
+                            <button onclick="renderModule('prior-authorization')" class="mt-4 px-4 py-2 text-sm rounded-full font-semibold btn-primary text-white">Start</button>
+                        </div>
+                        <div class="card bg-white p-6">
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">A/R Aging</h3>
+                            <p class="text-gray-600 mb-4">Manage outstanding claims and billing.</p>
+                            <div class="bg-gray-200 rounded-full progress-bar">
+                                <div id="ar-progress" class="bg-blue-500 rounded-full progress-bar transition-all"></div>
+                            </div>
+                            <p id="ar-status" class="text-sm text-gray-500 mt-2">0/1 scenario complete</p>
+                            <button onclick="renderModule('ar-aging')" class="mt-4 px-4 py-2 text-sm rounded-full font-semibold btn-primary text-white">Start</button>
+                        </div>
+                        <div class="card bg-white p-6">
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">E-Prescribing</h3>
+                            <p class="text-gray-600 mb-4">Simulate creating and sending a prescription.</p>
+                            <div class="bg-gray-200 rounded-full progress-bar">
+                                <div id="ep-progress" class="bg-blue-500 rounded-full progress-bar transition-all"></div>
+                            </div>
+                            <p id="ep-status" class="text-sm text-gray-500 mt-2">0/1 scenario complete</p>
+                            <button onclick="renderModule('e-prescribing')" class="mt-4 px-4 py-2 text-sm rounded-full font-semibold btn-primary text-white">Start</button>
+                        </div>
+                         <div class="card bg-white p-6">
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">Patient Data</h3>
+                            <p class="text-gray-600 mb-4">View and manage simulated patient records.</p>
+                            <div class="bg-gray-200 rounded-full progress-bar">
+                                <div id="pd-progress" class="bg-blue-500 rounded-full progress-bar transition-all"></div>
+                            </div>
+                            <p id="pd-status" class="text-sm text-gray-500 mt-2">0/1 scenario complete</p>
+                            <button onclick="renderModule('patient-data')" class="mt-4 px-4 py-2 text-sm rounded-full font-semibold btn-primary text-white">Start</button>
+                        </div>
+                        <div class="card bg-white p-6">
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">Vitals</h3>
+                            <p class="text-gray-600 mb-4">Log a patient's vital signs.</p>
+                            <div class="bg-gray-200 rounded-full progress-bar">
+                                <div id="vitals-progress" class="bg-blue-500 rounded-full progress-bar transition-all"></div>
+                            </div>
+                            <p id="vitals-status" class="text-sm text-gray-500 mt-2">0/1 steps complete</p>
+                            <button onclick="renderModule('vitals')" class="mt-4 px-4 py-2 text-sm rounded-full font-semibold btn-primary text-white">Start</button>
+                        </div>
+                    </div>
+                    <div class="mt-8">
+                        <button onclick="addSampleData()" class="px-6 py-3 bg-gray-600 text-white font-medium rounded-full shadow-md hover:bg-gray-700 transition-colors">Add Sample Data</button>
+                    </div>
+                </div>
+            `,
+            'patient-registration': `
+                <div id="patient-registration" class="space-y-4">
+                    <h2 class="text-2xl font-bold mb-4">Patient Registration</h2>
+                    <p class="text-gray-600 mb-4">Follow the steps to complete a full patient intake.</p>
+                    <div class="bg-gray-200 rounded-full progress-bar mb-4">
+                        <div id="pr-module-progress" class="bg-blue-500 rounded-full progress-bar transition-all"></div>
+                    </div>
+                    <div id="pr-ui" class="bg-white p-6 rounded-lg shadow-md">
+                        <div id="pr-step-content" class="space-y-4"></div>
+                        <div id="pr-success" class="bg-green-100 text-green-700 p-4 rounded-lg mt-4 hidden">
+                            <p>Patient registration complete! Great job.</p>
+                            <button onclick="renderModule('dashboard')" class="mt-4 text-sm font-semibold text-blue-600 hover:underline">Return to Dashboard</button>
+                        </div>
+                    </div>
+                </div>
+            `,
+            'interactive-calendar': `
+                <div id="interactive-calendar" class="space-y-4">
+                    <h2 class="text-2xl font-bold mb-4">Interactive Calendar</h2>
+                    <p class="text-gray-600 mb-4">Click an empty slot to schedule a new appointment.</p>
+                    <div class="bg-gray-200 rounded-full progress-bar mb-4">
+                        <div id="ic-module-progress" class="bg-blue-500 rounded-full progress-bar transition-all"></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <div class="flex justify-between items-center mb-4">
+                            <button id="prev-month" class="p-2 rounded-full hover:bg-gray-200 transition-colors">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                            </button>
+                            <h3 id="current-month-year" class="text-lg font-bold"></h3>
+                            <button id="next-month" class="p-2 rounded-full hover:bg-gray-200 transition-colors">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </button>
+                        </div>
+                        <div id="calendar-body" class="calendar-grid"></div>
+                    </div>
+                </div>
+            `,
+            'coding-quiz': `
+                <div id="coding-quiz" class="space-y-4">
+                    <h2 class="text-2xl font-bold mb-4">Medical Coding Quiz</h2>
+                    <p class="text-gray-600 mb-4">Test your knowledge of common medical codes.</p>
+                    <div class="bg-gray-200 rounded-full progress-bar mb-4">
+                        <div id="cq-module-progress" class="bg-blue-500 rounded-full progress-bar transition-all"></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <p id="cq-question" class="text-lg font-bold mb-4">Question loading...</p>
+                        <div id="cq-options" class="space-y-2"></div>
+                        <div id="cq-feedback" class="mt-4 text-sm font-medium"></div>
+                        <div id="cq-results" class="hidden mt-4 text-center">
+                            <p id="cq-score-text" class="text-xl font-bold mb-2"></p>
+                            <button id="cq-restart-btn" class="px-4 py-2 text-sm rounded-full font-semibold btn-primary text-white">Restart Quiz</button>
+                        </div>
+                    </div>
+                </div>
+            `,
+            'soap-notes': `
+                <div id="soap-notes" class="space-y-4">
+                    <h2 class="text-2xl font-bold mb-4">SOAP Notes</h2>
+                    <p class="text-gray-600 mb-4">Read the patient's chart and fill out the SOAP note below.</p>
+                    <div class="bg-gray-200 rounded-full progress-bar mb-4">
+                        <div id="sn-module-progress" class="bg-blue-500 rounded-full progress-bar transition-all"></div>
+                    </div>
+                    <div class="flex flex-col md:flex-row gap-6">
+                        <div class="bg-white p-6 rounded-lg shadow-md md:w-1/2">
+                            <h3 class="font-bold text-xl mb-4">Patient Chart: Sarah Davis</h3>
+                            <p class="mb-2"><strong>Patient Reported Symptoms:</strong> "My throat has been hurting for three days and I have a bad cough. I'm also very tired and have a mild headache."</p>
+                            <p class="mb-2"><strong>Provider Observations:</strong> Patient has a fever of $101.2^{\circ}F$. Throat is red and swollen. Lungs are clear. Rapid strep test is negative. No visible rash.</p>
+                            <p><strong>Diagnosis:</strong> Viral pharyngitis.</p>
+                        </div>
+                        <form id="sn-form" class="space-y-4 bg-white p-6 rounded-lg shadow-md md:w-1/2">
+                            <div class="input-group" data-step="1">
+                                <label>S - Subjective</label>
+                                <textarea placeholder="Patient's reported symptoms and feelings" name="subjective" rows="3" class="rounded-lg p-2 w-full" required></textarea>
+                            </div>
+                            <div class="input-group" data-step="2" style="display: none;">
+                                <label>O - Objective</label>
+                                <textarea placeholder="Provider's observations (vitals, test results)" name="objective" rows="3" class="rounded-lg p-2 w-full" required></textarea>
+                            </div>
+                            <div class="input-group" data-step="3" style="display: none;">
+                                <label>A - Assessment</label>
+                                <textarea placeholder="Diagnosis based on subjective and objective findings" name="assessment" rows="3" class="rounded-lg p-2 w-full" required></textarea>
+                            </div>
+                            <div class="input-group" data-step="4" style="display: none;">
+                                <label>P - Plan</label>
+                                <textarea placeholder="Treatment plan, next steps, follow-up instructions" name="plan" rows="3" class="rounded-lg p-2 w-full" required></textarea>
+                            </div>
+                            <button type="button" id="sn-next-btn" class="px-6 py-3 bg-blue-600 text-white font-medium rounded-full shadow-md hover:bg-blue-700 transition-colors">Next</button>
+                            <div id="sn-success" class="bg-green-100 text-green-700 p-4 rounded-lg mt-4 hidden">
+                                <p>SOAP note complete! You've successfully documented a patient's visit.</p>
+                                <button onclick="renderModule('dashboard')" class="mt-4 text-sm font-semibold text-blue-600 hover:underline">Return to Dashboard</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `,
+            'denial-management': `
+                <div id="denial-management" class="space-y-4">
+                    <h2 class="text-2xl font-bold mb-4">Denial Management</h2>
+                    <p class="text-gray-600 mb-4">Drag the correct action to resolve the denied claim.</p>
+                    <div class="bg-gray-200 rounded-full progress-bar mb-4">
+                        <div id="dm-module-progress" class="bg-blue-500 rounded-full progress-bar transition-all"></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="font-bold text-lg mb-2">Scenario:</h3>
+                        <p class="text-gray-700 mb-4">Claim ID: 456789. Patient: Jane Doe. Service: X-Ray. Denial Reason: "Not Medically Necessary".</p>
+                        <div class="flex flex-col md:flex-row gap-4 items-center">
+                            <div id="dm-drag-items" class="flex flex-col md:flex-row gap-4 flex-grow">
+                                <div class="bg-gray-100 p-4 rounded-lg shadow-sm cursor-grab" draggable="true" data-action="incorrect">Write off the claim and bill the patient.</div>
+                                <div class="bg-gray-100 p-4 rounded-lg shadow-sm cursor-grab" draggable="true" data-action="correct">Submit a corrected claim with supporting documentation.</div>
+                                <div class="bg-gray-100 p-4 rounded-lg shadow-sm cursor-grab" draggable="true" data-action="incorrect">Send the claim to a collection agency.</div>
+                            </div>
+                            <div id="dm-drop-target" class="drag-target w-full md:w-1/2 flex items-center justify-center text-center text-gray-500">
+                                Drop correct action here
+                            </div>
+                        </div>
+                        <div id="dm-feedback" class="mt-4 text-center font-medium"></div>
+                    </div>
+                </div>
+            `,
+            'prior-authorization': `
+                <div id="prior-authorization" class="space-y-4">
+                    <h2 class="text-2xl font-bold mb-4">Prior Authorization</h2>
+                    <p class="text-gray-600 mb-4">Click the correct action to obtain prior authorization.</p>
+                    <div class="bg-gray-200 rounded-full progress-bar mb-4">
+                        <div id="pa-module-progress" class="bg-blue-500 rounded-full progress-bar transition-all"></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="font-bold text-lg mb-2">Scenario:</h3>
+                        <p class="text-gray-700 mb-4">Patient: John Smith. Insurance: BlueCross. Service: MRI. The insurance policy states an MRI requires prior authorization.</p>
+                        <div id="pa-options" class="flex flex-col space-y-2">
+                            <button class="w-full py-2 px-4 text-left rounded-md bg-gray-100 hover:bg-gray-200 transition-colors" data-answer="incorrect">Tell the patient they cannot get the MRI.</button>
+                            <button class="w-full py-2 px-4 text-left rounded-md bg-gray-100 hover:bg-gray-200 transition-colors" data-answer="correct">Call the insurance company and provide the patient's information and medical necessity.</button>
+                            <button class="w-full py-2 px-4 text-left rounded-md bg-gray-100 hover:bg-gray-200 transition-colors" data-answer="incorrect">Schedule the MRI without contacting the insurance company.</button>
+                        </div>
+                        <div id="pa-feedback" class="mt-4 text-center font-medium"></div>
+                    </div>
+                </div>
+            `,
+            'ar-aging': `
+                <div id="ar-aging" class="space-y-4">
+                    <h2 class="text-2xl font-bold mb-4">A/R Aging</h2>
+                    <p class="text-gray-600 mb-4">Identify the claim that should be addressed first from the A/R aging report below.</p>
+                    <div class="bg-gray-200 rounded-full progress-bar mb-4">
+                        <div id="ar-module-progress" class="bg-blue-500 rounded-full progress-bar transition-all"></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Claim ID</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patient Name</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service Date</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Outstanding Days</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">123456</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Laura Jones</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2023-11-15</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">1-30</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"><button class="text-blue-600 hover:text-blue-900 ar-action-btn" data-claim-age="1-30">Work Claim</button></td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">789012</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">David Chen</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2023-08-01</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-bold text-red-600">90+</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"><button class="text-blue-600 hover:text-blue-900 ar-action-btn" data-claim-age="90+">Work Claim</button></td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">345678</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Emily Clark</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2023-10-05</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">31-60</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"><button class="text-blue-600 hover:text-blue-900 ar-action-btn" data-claim-age="31-60">Work Claim</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div id="ar-feedback" class="mt-4 text-center font-medium"></div>
+                    </div>
+                </div>
+            `,
+            'e-prescribing': `
+                <div id="e-prescribing" class="space-y-4">
+                    <h2 class="text-2xl font-bold mb-4">E-Prescribing</h2>
+                    <p class="text-gray-600 mb-4">Simulate the process of creating and sending a prescription.</p>
+                    <div class="bg-gray-200 rounded-full progress-bar mb-4">
+                        <div id="ep-module-progress" class="bg-blue-500 rounded-full progress-bar transition-all"></div>
+                    </div>
+                    <form id="ep-form" class="space-y-4 bg-white p-6 rounded-lg shadow-md">
+                        <div class="input-group" data-step="1">
+                            <label>Select Patient</label>
+                            <select id="ep-patient-select" class="rounded-lg p-2 w-full" required>
+                                <option value="">-- Select a patient --</option>
+                            </select>
+                        </div>
+                        <div class="input-group" data-step="2" style="display: none;">
+                            <label>Medication Order</label>
+                            <input type="text" placeholder="Medication Name" name="medication" class="rounded-lg p-2 w-full" required>
+                            <input type="text" placeholder="Dosage (e.g., 500mg)" name="dosage" class="rounded-lg p-2 w-full mt-2" required>
+                        </div>
+                        <div class="input-group" data-step="3" style="display: none;">
+                            <label>Pharmacy Information</label>
+                            <input type="text" placeholder="Pharmacy Name" name="pharmacy" class="rounded-lg p-2 w-full" required>
+                        </div>
+                        <button type="button" id="ep-next-btn" class="px-6 py-3 bg-blue-600 text-white font-medium rounded-full shadow-md hover:bg-blue-700 transition-colors">Next</button>
+                    </form>
+                    <div id="ep-success" class="bg-green-100 text-green-700 p-4 rounded-lg mt-4 hidden">
+                        <p>Scenario complete! Prescription successfully prepared for electronic transmission.</p>
+                        <button onclick="renderModule('dashboard')" class="mt-4 text-sm font-semibold text-blue-600 hover:underline">Return to Dashboard</button>
+                    </div>
+                </div>
+            `,
+            'patient-data': `
+                <div id="patient-data" class="space-y-4">
+                    <h2 class="text-2xl font-bold mb-4">Patient Data</h2>
+                    <p class="text-gray-600 mb-4">View and manage simulated patient records. Click on a patient to see their details.</p>
+                    <div class="bg-gray-200 rounded-full progress-bar mb-4">
+                        <div id="pd-module-progress" class="bg-blue-500 rounded-full progress-bar transition-all"></div>
+                    </div>
+                    <div class="flex flex-col lg:flex-row gap-6">
+                        <div class="lg:w-1/3 bg-white p-6 rounded-lg shadow-md">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-xl font-bold">Patient List</h3>
+                                <button onclick="renderPatientForm()" class="px-4 py-2 text-sm rounded-full font-semibold btn-primary text-white">Add Patient</button>
+                            </div>
+                            <div id="patient-list" class="space-y-2">
+                                <!-- Patient list will be populated here -->
+                            </div>
+                        </div>
+                        <div id="patient-details-container" class="lg:w-2/3 bg-white p-6 rounded-lg shadow-md hidden">
+                            <h3 id="patient-details-name" class="text-2xl font-bold mb-4"></h3>
+                            <div class="space-y-2 text-gray-700">
+                                <p><strong>DOB:</strong> <span id="patient-details-dob"></span></p>
+                                <p><strong>Gender:</strong> <span id="patient-details-gender"></span></p>
+                                <p><strong>Medical History:</strong> <span id="patient-details-history"></span></p>
+                            </div>
+                            <button onclick="hidePatientDetails()" class="mt-4 px-4 py-2 text-sm rounded-full font-semibold bg-gray-300 text-gray-700 hover:bg-gray-400 transition-colors">Back to List</button>
+                        </div>
+                        <form id="add-patient-form" class="lg:w-2/3 bg-white p-6 rounded-lg shadow-md hidden">
+                            <h3 class="text-2xl font-bold mb-4">Add New Patient</h3>
+                            <div class="input-group">
+                                <label>Full Name</label>
+                                <input type="text" name="name" class="rounded-lg p-2 w-full" required>
+                            </div>
+                            <div class="input-group">
+                                <label>Date of Birth</label>
+                                <input type="date" name="dob" class="rounded-lg p-2 w-full" required>
+                            </div>
+                            <div class="input-group">
+                                <label>Gender</label>
+                                <select name="gender" class="rounded-lg p-2 w-full" required>
+                                    <option value="">Select Gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>Medical History</label>
+                                <textarea name="history" rows="3" class="rounded-lg p-2 w-full" placeholder="e.g., Allergies, past surgeries"></textarea>
+                            </div>
+                            <div class="flex gap-2">
+                                <button type="submit" class="px-6 py-3 bg-blue-600 text-white font-medium rounded-full shadow-md hover:bg-blue-700 transition-colors">Save Patient</button>
+                                <button type="button" onclick="hidePatientForm()" class="px-6 py-3 bg-gray-300 text-gray-700 font-medium rounded-full shadow-md hover:bg-gray-400 transition-colors">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `,
+            'vitals': `
+                <div id="vitals" class="space-y-4">
+                    <h2 class="text-2xl font-bold mb-4">Vitals</h2>
+                    <p class="text-gray-600 mb-4">Enter a patient's vital signs and save the data.</p>
+                    <div class="bg-gray-200 rounded-full progress-bar mb-4">
+                        <div id="vitals-module-progress" class="bg-blue-500 rounded-full progress-bar transition-all"></div>
+                    </div>
+                    <form id="vitals-form" class="space-y-4 bg-white p-6 rounded-lg shadow-md">
+                        <div class="input-group">
+                            <label>Patient Name</label>
+                            <input type="text" placeholder="Patient Name" name="patient-name" class="rounded-lg p-2 w-full" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Temperature ($^{\circ}F$)</label>
+                            <input type="number" placeholder="e.g., 98.6" name="temperature" step="0.1" class="rounded-lg p-2 w-full" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Blood Pressure (mmHg)</label>
+                            <input type="text" placeholder="e.g., 120/80" name="blood-pressure" class="rounded-lg p-2 w-full" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Heart Rate (bpm)</label>
+                            <input type="number" placeholder="e.g., 75" name="heart-rate" class="rounded-lg p-2 w-full" required>
+                        </div>
+                        <button type="submit" class="px-6 py-3 bg-blue-600 text-white font-medium rounded-full shadow-md hover:bg-blue-700 transition-colors">Save Vitals</button>
+                    </form>
+                    <div id="vitals-success" class="bg-green-100 text-green-700 p-4 rounded-lg mt-4 hidden">
+                        <p>Vitals logged successfully!</p>
+                        <button onclick="renderModule('dashboard')" class="mt-4 text-sm font-semibold text-blue-600 hover:underline">Return to Dashboard</button>
+                    </div>
+                </div>
+            `
+        };
+
+        // Module Rendering
+        window.renderModule = (moduleId) => {
+            const template = moduleTemplates[moduleId];
+            if (template) {
+                contentArea.innerHTML = template;
+                document.getElementById('page-title').textContent = moduleId.replace(/-/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+                
+                // Initialize specific module logic
+                if (moduleId === 'dashboard') {
+                    updateDashboardUI();
+                } else if (moduleId === 'patient-registration') {
+                    initPatientRegistration();
+                } else if (moduleId === 'interactive-calendar') {
+                    initInteractiveCalendar();
+                } else if (moduleId === 'coding-quiz') {
+                    initCodingQuiz();
+                } else if (moduleId === 'soap-notes') {
+                    initSoapNotes();
+                } else if (moduleId === 'denial-management') {
+                    initDenialManagement();
+                } else if (moduleId === 'prior-authorization') {
+                    initPriorAuthorization();
+                } else if (moduleId === 'ar-aging') {
+                    initARAging();
+                } else if (moduleId === 'e-prescribing') {
+                    renderEPrescribing();
+                } else if (moduleId === 'patient-data') {
+                    renderPatientData();
+                } else if (moduleId === 'vitals') {
+                    initVitals();
+                }
+            } else {
+                contentArea.innerHTML = '<p class="text-xl text-gray-500">Module not found.</p>';
+            }
+        };
+
+        // Module Logic Functions
+        let prCurrentStep = 0;
+        function initPatientRegistration() {
+            prCurrentStep = moduleProgress['patient-registration'] || 0;
+            const uiContainer = document.getElementById('pr-step-content');
+            uiContainer.innerHTML = ''; // Clear previous content
+            
+            if (prCurrentStep >= modules['patient-registration'].steps) {
+                document.getElementById('pr-success').classList.remove('hidden');
+            } else {
+                const form = document.createElement('form');
+                form.className = "space-y-4";
+                form.id = "pr-form";
+                
+                const stepsContent = [
+                    `<label>Patient Demographics</label>
+                     <input type="text" placeholder="Full Name" name="name" class="rounded-lg p-2 w-full" required>`,
+                    `<label>Contact Information</label>
+                     <input type="email" placeholder="Email Address" name="email" class="rounded-lg p-2 w-full" required>`,
+                    `<label>Insurance Provider</label>
+                     <input type="text" placeholder="Insurance Company" name="insurance" class="rounded-lg p-2 w-full" required>`,
+                    `<label>Chief Complaint</label>
+                     <textarea placeholder="Describe the reason for the visit" name="complaint" rows="3" class="rounded-lg p-2 w-full" required></textarea>`,
+                    `<label>Medical History</label>
+                     <textarea placeholder="List allergies, past surgeries, and medications" name="history" rows="3" class="rounded-lg p-2 w-full" required></textarea>`
+                ];
+
+                form.innerHTML = `
+                    <div class="input-group">${stepsContent[prCurrentStep]}</div>
+                    <button type="button" id="pr-next-btn" class="px-6 py-3 bg-blue-600 text-white font-medium rounded-full shadow-md hover:bg-blue-700 transition-colors">Next</button>
+                `;
+                uiContainer.appendChild(form);
+                
+                const nextBtn = document.getElementById('pr-next-btn');
+                if (nextBtn) {
+                    nextBtn.addEventListener('click', () => {
+                        const input = form.querySelector('input, textarea');
+                        if (input && input.value.trim() !== '') {
+                            const nextStepIndex = prCurrentStep + 1;
+                            updateModuleProgress('patient-registration', nextStepIndex);
+                        } else {
+                            showMessage("Please fill out this field to continue.", false);
+                        }
+                    });
+                }
+            }
+            updateModuleProgressUI('patient-registration');
+        }
+
+        let currentCalendarDate = new Date();
+        function initInteractiveCalendar() {
+            renderCalendar(currentCalendarDate);
+            document.getElementById('prev-month').addEventListener('click', () => {
+                currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
+                renderCalendar(currentCalendarDate);
             });
-        }
-
-        function showPatientDetails(patient) {
-            document.getElementById('patient-details-name').textContent = patient.name;
-            document.getElementById('patient-details-dob').textContent = patient.dob;
-            document.getElementById('patient-details-gender').textContent = patient.gender;
-            document.getElementById('patient-details-history').textContent = patient.medicalHistory;
-            document.getElementById('patient-details-container').classList.remove('hidden');
-            document.getElementById('add-patient-form').classList.add('hidden');
-            document.querySelectorAll('.patient-list-item').forEach(item => item.classList.remove('active', 'bg-gray-200'));
-            const activeItem = document.querySelector(`.patient-list-item[onclick*='${patient.id}']`);
-            if (activeItem) {
-                activeItem.classList.add('active', 'bg-gray-200');
-            }
-            updateModuleProgress('patient-data', 1);
-        }
-
-        window.showPatientForm = () => {
-            document.getElementById('add-patient-form').classList.remove('hidden');
-            document.getElementById('patient-details-container').classList.add('hidden');
-            document.querySelectorAll('.patient-list-item').forEach(item => item.classList.remove('active', 'bg-gray-200'));
-        };
-
-        window.hidePatientForm = () => {
-            document.getElementById('add-patient-form').classList.add('hidden');
-        };
-        
-        document.getElementById('add-patient-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const form = e.target;
-            if (!form.reportValidity()) {
-                return;
-            }
-            const patientData = {
-                name: form.name.value,
-                dob: form.dob.value,
-                gender: form.gender.value,
-                medicalHistory: form.history.value,
-            };
-            const patientsCollection = collection(db, 'artifacts', appId, 'public', 'data', 'patients');
-            try {
-                await addDoc(patientsCollection, patientData);
-                showMessage('Patient added successfully!', true);
-                form.reset();
-                hidePatientForm();
-            } catch (error) {
-                console.error("Error adding patient:", error);
-                showMessage('Failed to add patient. Check console for details.', false);
-            }
-        });
-
-        // Module Navigation
-        window.showDashboard = () => {
-            document.querySelectorAll('.page-content').forEach(el => el.classList.add('hidden'));
-            document.getElementById('dashboard').classList.remove('hidden');
-            document.getElementById('page-title').textContent = 'Dashboard';
-        };
-
-        window.showModule = (moduleId) => {
-            document.querySelectorAll('.page-content').forEach(el => el.classList.add('hidden'));
-            document.getElementById('modules-container').classList.remove('hidden');
-            document.getElementById(moduleId).classList.remove('hidden');
-            document.getElementById('page-title').textContent = moduleId.replace(/-/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-
-            const module = modules[moduleId];
-            if (module.formId) {
-                const form = document.getElementById(module.formId);
-                let currentStep = moduleProgress[moduleId] || 0;
-                showFormStep(form, currentStep);
-                updateModuleProgress(moduleId, currentStep);
-            }
-            if (moduleId === 'vitals') {
-                updateModuleProgress('vitals', 0); // Reset progress for a new submission
-            }
-        };
-
-        function showFormStep(form, stepIndex) {
-            form.querySelectorAll('[data-step]').forEach(el => el.style.display = 'none');
-            const stepEl = form.querySelector(`[data-step="${stepIndex + 1}"]`);
-            if (stepEl) {
-                stepEl.style.display = 'block';
-            }
-            if (stepIndex >= modules[form.parentElement.id].steps) {
-                form.style.display = 'none';
-                document.getElementById(modules[form.parentElement.id].successEl).classList.remove('hidden');
-            }
-        }
-
-        async function updateModuleProgress(moduleId, newProgress) {
-            if (!isAuthReady) return;
-            const userDocRef = doc(db, 'artifacts', appId, 'users', userId);
-            const progressData = {};
-            progressData[`progress.${moduleId}`] = newProgress;
-
-            await setDoc(userDocRef, progressData, { merge: true });
-        }
-
-        function showMessage(text, isSuccess) {
-            const el = document.getElementById('message-box');
-            el.textContent = text;
-            el.classList.remove('hidden', 'bg-red-500', 'bg-green-500');
-            el.classList.add(isSuccess ? 'bg-green-500' : 'bg-red-500');
-            setTimeout(() => el.classList.add('hidden'), 3000);
-        }
-
-        // Patient Registration Module Logic
-        document.getElementById('pr-next-btn').addEventListener('click', () => {
-            const form = document.getElementById('pr-form');
-            let currentStep = moduleProgress['patient-registration'] || 0;
-            const currentStepEl = form.querySelector(`[data-step="${currentStep + 1}"]`);
-            if (currentStepEl) {
-                const input = currentStepEl.querySelector('input, textarea');
-                if (input && input.value.trim() !== '') {
-                    const nextStepIndex = currentStep + 1;
-                    updateModuleProgress('patient-registration', nextStepIndex);
-                    moduleProgress['patient-registration'] = nextStepIndex; // Synchronous update
-                    showFormStep(form, nextStepIndex);
-                } else {
-                    showMessage("Please fill out this field to continue.", false);
-                }
-            }
-        });
-
-        // Interactive Calendar Module Logic
-        document.getElementById('ic-next-btn').addEventListener('click', () => {
-            const form = document.getElementById('ic-form');
-            let currentStep = moduleProgress['interactive-calendar'] || 0;
-            const currentStepEl = form.querySelector(`[data-step="${currentStep + 1}"]`);
-            if (currentStepEl) {
-                const input = currentStepEl.querySelector('input, textarea');
-                if (input && input.value.trim() !== '') {
-                    const nextStepIndex = currentStep + 1;
-                    updateModuleProgress('interactive-calendar', nextStepIndex);
-                    moduleProgress['interactive-calendar'] = nextStepIndex; // Synchronous update
-                    showFormStep(form, nextStepIndex);
-                } else {
-                    showMessage("Please fill out this field to continue.", false);
-                }
-            }
-        });
-
-        // SOAP Notes Module Logic
-        document.getElementById('sn-next-btn').addEventListener('click', () => {
-            const form = document.getElementById('sn-form');
-            let currentStep = moduleProgress['soap-notes'] || 0;
-            const currentStepEl = form.querySelector(`[data-step="${currentStep + 1}"]`);
-            if (currentStepEl) {
-                const input = currentStepEl.querySelector('textarea');
-                if (input && input.value.trim() !== '') {
-                    const nextStepIndex = currentStep + 1;
-                    updateModuleProgress('soap-notes', nextStepIndex);
-                    moduleProgress['soap-notes'] = nextStepIndex; // Synchronous update
-                    showFormStep(form, nextStepIndex);
-                } else {
-                    showMessage("Please fill out this field to continue.", false);
-                }
-            }
-        });
-
-        // Denial Management Module Logic
-        document.getElementById('dm-next-btn').addEventListener('click', () => {
-            const form = document.getElementById('dm-form');
-            if (form.reportValidity()) {
-                if (form.elements['dm-answer'].value === modules['denial-management'].answer) {
-                    updateModuleProgress('denial-management', 1);
-                    form.style.display = 'none';
-                    document.getElementById('dm-success').classList.remove('hidden');
-                } else {
-                    showMessage('Incorrect. Please try again.', false);
-                }
-            }
-        });
-
-        // Prior Authorization Module Logic
-        document.getElementById('pa-next-btn').addEventListener('click', () => {
-            const form = document.getElementById('pa-form');
-            if (form.reportValidity()) {
-                if (form.elements['pa-answer'].value === modules['prior-authorization'].answer) {
-                    updateModuleProgress('prior-authorization', 1);
-                    form.style.display = 'none';
-                    document.getElementById('pa-success').classList.remove('hidden');
-                } else {
-                    showMessage('Incorrect. Please try again.', false);
-                }
-            }
-        });
-
-        // A/R Aging Module Logic
-        document.getElementById('ar-next-btn').addEventListener('click', () => {
-            const form = document.getElementById('ar-form');
-            if (form.reportValidity()) {
-                if (form.elements['ar-answer'].value === modules['ar-aging'].answer) {
-                    updateModuleProgress('ar-aging', 1);
-                    form.style.display = 'none';
-                    document.getElementById('ar-success').classList.remove('hidden');
-                } else {
-                    showMessage('Incorrect. Please try again.', false);
-                }
-            }
-        });
-        
-        // E-Prescribing Module Logic
-        document.getElementById('ep-next-btn').addEventListener('click', () => {
-            const form = document.getElementById('ep-form');
-            let currentStep = moduleProgress['e-prescribing'] || 0;
-            const currentStepEl = form.querySelector(`[data-step="${currentStep + 1}"]`);
-            if (currentStepEl) {
-                const inputs = currentStepEl.querySelectorAll('input, select');
-                let isValid = true;
-                inputs.forEach(input => {
-                    if (!input.value.trim()) {
-                        isValid = false;
-                        showMessage("Please fill out all fields to continue.", false);
-                    }
-                });
-                if (isValid) {
-                    const nextStepIndex = currentStep + 1;
-                    updateModuleProgress('e-prescribing', nextStepIndex);
-                    moduleProgress['e-prescribing'] = nextStepIndex; // Synchronous update
-                    showFormStep(form, nextStepIndex);
-                }
-            }
-        });
-
-        function populatePatientDropdowns() {
-            const epSelect = document.getElementById('ep-patient-select');
-            const currentSelected = epSelect.value;
-            epSelect.innerHTML = '<option value="">-- Select a patient --</option>';
-            patientList.forEach(patient => {
-                const option = document.createElement('option');
-                option.value = patient.id;
-                option.textContent = patient.name;
-                epSelect.appendChild(option);
+            document.getElementById('next-month').addEventListener('click', () => {
+                currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
+                renderCalendar(currentCalendarDate);
             });
-            epSelect.value = currentSelected;
+            updateModuleProgressUI('interactive-calendar');
+        }
+
+        function renderCalendar(date) {
+            const calendarBody = document.getElementById('calendar-body');
+            const monthYearHeader = document.getElementById('current-month-year');
+            const daysInMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+            const firstDay = new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+            const monthName = date.toLocaleString('default', { month: 'long' });
+            monthYearHeader.textContent = `${monthName} ${date.getFullYear()}`;
+            calendarBody.innerHTML = '';
+
+            const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            daysOfWeek.forEach(day => {
+                const dayHeader = document.createElement('div');
+                dayHeader.textContent = day;
+                dayHeader.className = 'text-center text-sm font-semibold p-2';
+                calendarBody.appendChild(dayHeader);
+            });
+
+            for (let i = 0; i < firstDay; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'calendar-day';
+                calendarBody.appendChild(emptyCell);
+            }
+            for (let i = 1; i <= daysInMonth; i++) {
+                const dayCell = document.createElement('div');
+                dayCell.className = 'calendar-day hover:bg-blue-100 transition-colors cursor-pointer';
+                dayCell.innerHTML = `<span class="font-bold">${i}</span>`;
+                dayCell.onclick = () => showModal(`Schedule appointment on ${monthName} ${i}`);
+                calendarBody.appendChild(dayCell);
+            }
         }
         
-        // Vitals Module Logic
-        document.getElementById('vitals-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const form = e.target;
-            if (!form.reportValidity()) {
-                return;
-            }
-            const vitalsData = {
-                patientName: form['patient-name'].value,
-                temperature: form.temperature.value,
-                bloodPressure: form['blood-pressure'].value,
-                heartRate: form['heart-rate'].value,
-                timestamp: new Date().toISOString()
-            };
-            const vitalsCollection = collection(db, 'artifacts', appId, 'users', userId, 'vitals');
-            try {
-                await addDoc(vitalsCollection, vitalsData);
-                showMessage('Vitals logged successfully!', true);
-                updateModuleProgress('vitals', 1);
-                form.style.display = 'none';
-                document.getElementById('vitals-success').classList.remove('hidden');
-                form.reset();
-            } catch (error) {
-                console.error("Error logging vitals:", error);
-                showMessage('Failed to log vitals. Check console for details.', false);
-            }
-        });
-
-
-        // Sample Data & Firebase Logic
-        window.addSampleData = async () => {
-            if (!isAuthReady) {
-                showMessage("Authentication not ready. Please wait a moment.", false);
-                return;
-            }
-            const userDocRef = doc(db, 'artifacts', appId, 'users', userId);
-            const sampleProgress = {
-                'patient-registration': 5,
-                'interactive-calendar': 3,
-                'coding-quiz': 1,
-                'soap-notes': 4,
-                'denial-management': 1,
-                'prior-authorization': 1,
-                'ar-aging': 1,
-                'e-prescribing': 3,
-                'patient-data': 1,
-                'vitals': 1
-            };
-            try {
-                await setDoc(userDocRef, { progress: sampleProgress }, { merge: true });
-                showMessage("Sample data added successfully!", true);
-            } catch (error) {
-                console.error("Error adding sample data:", error);
-                showMessage("Failed to add sample data. Check console for details.", false);
-            }
-        };
-
-        // Medical Coding Quiz Logic
         const quizQuestions = [
             { question: "What does CPT stand for?", options: ["Current Patient Treatments", "Code of Professional Terms", "Current Procedural Terminology", "Clinical Procedure Techniques"], answer: "Current Procedural Terminology" },
             { question: "ICD-10-CM is used for...", options: ["Billing for supplies", "Documenting diagnoses", "Submitting claims", "Tracking appointments"], answer: "Documenting diagnoses" },
@@ -1050,10 +881,20 @@
         let currentQuizQuestionIndex = 0;
         let quizScore = 0;
 
+        function initCodingQuiz() {
+            currentQuizQuestionIndex = 0;
+            quizScore = 0;
+            loadQuizQuestion();
+            updateModuleProgressUI('coding-quiz');
+            document.getElementById('cq-restart-btn').addEventListener('click', initCodingQuiz);
+        }
+
         function loadQuizQuestion() {
             const q = quizQuestions[currentQuizQuestionIndex];
-            document.getElementById('cq-question').textContent = q.question;
             const optionsContainer = document.getElementById('cq-options');
+            if (!q || !optionsContainer) { return; } // Avoid errors if the element isn't there
+            
+            document.getElementById('cq-question').textContent = q.question;
             optionsContainer.innerHTML = '';
             
             q.options.forEach(option => {
@@ -1085,17 +926,370 @@
             document.getElementById('cq-score-text').textContent = `You scored ${quizScore} out of ${quizQuestions.length}!`;
             updateModuleProgress('coding-quiz', 1); // Mark quiz as complete
         }
-        document.getElementById('cq-restart-btn').onclick = () => {
-            currentQuizQuestionIndex = 0;
-            quizScore = 0;
-            document.getElementById('cq-results').classList.add('hidden');
-            document.getElementById('cq-feedback').textContent = '';
-            loadQuizQuestion();
+
+        function initSoapNotes() {
+            const form = document.getElementById('sn-form');
+            let currentStep = moduleProgress['soap-notes'] || 0;
+            
+            function showStep(stepIndex) {
+                form.querySelectorAll('[data-step]').forEach(el => el.style.display = 'none');
+                const stepEl = form.querySelector(`[data-step="${stepIndex + 1}"]`);
+                if (stepEl) {
+                    stepEl.style.display = 'block';
+                }
+                if (stepIndex >= modules['soap-notes'].steps) {
+                    form.style.display = 'none';
+                    document.getElementById('sn-success').classList.remove('hidden');
+                }
+            }
+
+            showStep(currentStep);
+
+            document.getElementById('sn-next-btn').addEventListener('click', () => {
+                const input = form.querySelector(`[data-step="${currentStep + 1}"] textarea`);
+                if (input && input.value.trim() !== '') {
+                    currentStep++;
+                    updateModuleProgress('soap-notes', currentStep);
+                    showStep(currentStep);
+                } else {
+                    showMessage("Please fill out this field to continue.", false);
+                }
+            });
+            updateModuleProgressUI('soap-notes');
+        }
+
+        function initDenialManagement() {
+            const dropTarget = document.getElementById('dm-drop-target');
+            const dragItems = document.querySelectorAll('#dm-drag-items > div');
+            const feedbackEl = document.getElementById('dm-feedback');
+
+            dragItems.forEach(item => {
+                item.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', e.target.dataset.action);
+                });
+            });
+
+            dropTarget.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropTarget.classList.add('drag-over');
+            });
+
+            dropTarget.addEventListener('dragleave', () => {
+                dropTarget.classList.remove('drag-over');
+            });
+
+            dropTarget.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropTarget.classList.remove('drag-over');
+                const data = e.dataTransfer.getData('text/plain');
+                if (data === 'correct') {
+                    feedbackEl.textContent = 'Correct! This is the most effective way to appeal the denial.';
+                    feedbackEl.className = 'mt-4 text-center font-bold text-green-600';
+                    updateModuleProgress('denial-management', 1);
+                    dropTarget.textContent = 'Correct Answer Dropped!';
+                } else {
+                    feedbackEl.textContent = 'Incorrect. That action is not a standard or effective way to manage this type of denial.';
+                    feedbackEl.className = 'mt-4 text-center font-bold text-red-600';
+                }
+            });
+            updateModuleProgressUI('denial-management');
+        }
+
+        function initPriorAuthorization() {
+            const options = document.querySelectorAll('#pa-options button');
+            const feedbackEl = document.getElementById('pa-feedback');
+
+            options.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (btn.dataset.answer === 'correct') {
+                        feedbackEl.textContent = 'Correct! This is the required first step.';
+                        feedbackEl.className = 'mt-4 text-center font-bold text-green-600';
+                        updateModuleProgress('prior-authorization', 1);
+                        options.forEach(b => b.disabled = true);
+                    } else {
+                        feedbackEl.textContent = 'Incorrect. That action would likely result in the service being denied.';
+                        feedbackEl.className = 'mt-4 text-center font-bold text-red-600';
+                    }
+                });
+            });
+            updateModuleProgressUI('prior-authorization');
+        }
+
+        function initARAging() {
+            const buttons = document.querySelectorAll('.ar-action-btn');
+            const feedbackEl = document.getElementById('ar-feedback');
+
+            buttons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (btn.dataset.claimAge === '90+') {
+                        feedbackEl.textContent = 'Correct! Working the oldest claims first is a best practice to prevent them from becoming uncollectible.';
+                        feedbackEl.className = 'mt-4 text-center font-bold text-green-600';
+                        updateModuleProgress('ar-aging', 1);
+                        buttons.forEach(b => b.disabled = true);
+                    } else {
+                        feedbackEl.textContent = 'Incorrect. While all claims need to be worked, the ones aged 90+ days are the most urgent.';
+                        feedbackEl.className = 'mt-4 text-center font-bold text-red-600';
+                    }
+                });
+            });
+            updateModuleProgressUI('ar-aging');
+        }
+
+        let epCurrentStep = 0;
+        function renderEPrescribing() {
+            epCurrentStep = moduleProgress['e-prescribing'] || 0;
+            
+            const form = document.getElementById('ep-form');
+            if (epCurrentStep >= modules['e-prescribing'].steps) {
+                form.style.display = 'none';
+                document.getElementById('ep-success').classList.remove('hidden');
+            } else {
+                form.style.display = 'block';
+                const epSelect = document.getElementById('ep-patient-select');
+                epSelect.innerHTML = '<option value="">-- Select a patient --</option>';
+                patientList.forEach(patient => {
+                    const option = document.createElement('option');
+                    option.value = patient.id;
+                    option.textContent = patient.name;
+                    epSelect.appendChild(option);
+                });
+                
+                // Show current step form field
+                form.querySelectorAll('[data-step]').forEach(el => el.style.display = 'none');
+                const stepEl = form.querySelector(`[data-step="${epCurrentStep + 1}"]`);
+                if (stepEl) {
+                    stepEl.style.display = 'block';
+                }
+
+                document.getElementById('ep-next-btn').onclick = () => {
+                    const inputs = form.querySelector(`[data-step="${epCurrentStep + 1}"]`).querySelectorAll('input, select');
+                    let isValid = true;
+                    inputs.forEach(input => {
+                        if (!input.value.trim()) {
+                            isValid = false;
+                        }
+                    });
+                    if (isValid) {
+                        const nextStepIndex = epCurrentStep + 1;
+                        updateModuleProgress('e-prescribing', nextStepIndex);
+                    } else {
+                        showMessage("Please fill out all fields to continue.", false);
+                    }
+                };
+            }
+            updateModuleProgressUI('e-prescribing');
+        }
+
+        function renderPatientData() {
+            const listContainer = document.getElementById('patient-list');
+            listContainer.innerHTML = '';
+            patientList.forEach(patient => {
+                const item = document.createElement('div');
+                item.className = 'patient-list-item bg-gray-100 hover:bg-gray-200 transition-colors p-3 rounded-lg cursor-pointer';
+                item.textContent = patient.name;
+                item.onclick = () => showPatientDetails(patient);
+                listContainer.appendChild(item);
+            });
+            document.getElementById('add-patient-form').classList.add('hidden');
+            document.getElementById('patient-details-container').classList.add('hidden');
+            updateModuleProgressUI('patient-data');
+        }
+
+        function showPatientDetails(patient) {
+            document.getElementById('patient-details-name').textContent = patient.name;
+            document.getElementById('patient-details-dob').textContent = patient.dob;
+            document.getElementById('patient-details-gender').textContent = patient.gender;
+            document.getElementById('patient-details-history').textContent = patient.medicalHistory;
+            document.getElementById('patient-details-container').classList.remove('hidden');
+            document.querySelectorAll('.patient-list-item').forEach(item => item.classList.remove('active', 'bg-gray-200'));
+            const activeItem = document.querySelector(`.patient-list-item[onclick*='${patient.id}']`);
+            if (activeItem) {
+                activeItem.classList.add('active', 'bg-gray-200');
+            }
+            updateModuleProgress('patient-data', 1);
+        }
+
+        window.renderPatientForm = () => {
+            document.getElementById('add-patient-form').classList.remove('hidden');
+            document.getElementById('patient-details-container').classList.add('hidden');
+            document.querySelectorAll('.patient-list-item').forEach(item => item.classList.remove('active', 'bg-gray-200'));
         };
+
+        window.hidePatientDetails = () => {
+            document.getElementById('patient-details-container').classList.add('hidden');
+        };
+        
+        window.hidePatientForm = () => {
+            document.getElementById('add-patient-form').classList.add('hidden');
+        };
+        
+        function initPatientForm() {
+            const form = document.getElementById('add-patient-form');
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                if (!form.reportValidity()) {
+                    return;
+                }
+                const patientData = {
+                    name: form.name.value,
+                    dob: form.dob.value,
+                    gender: form.gender.value,
+                    medicalHistory: form.history.value,
+                };
+                const patientsCollection = collection(db, 'artifacts', appId, 'public', 'data', 'patients');
+                try {
+                    await addDoc(patientsCollection, patientData);
+                    showMessage('Patient added successfully!', true);
+                    form.reset();
+                    hidePatientForm();
+                } catch (error) {
+                    console.error("Error adding patient:", error);
+                    showMessage('Failed to add patient. Check console for details.', false);
+                }
+            });
+        }
+        
+        function initVitals() {
+            const form = document.getElementById('vitals-form');
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                if (!form.reportValidity()) {
+                    return;
+                }
+                const vitalsData = {
+                    patientName: form['patient-name'].value,
+                    temperature: form.temperature.value,
+                    bloodPressure: form['blood-pressure'].value,
+                    heartRate: form['heart-rate'].value,
+                    timestamp: new Date().toISOString()
+                };
+                const vitalsCollection = collection(db, 'artifacts', appId, 'users', userId, 'vitals');
+                try {
+                    await addDoc(vitalsCollection, vitalsData);
+                    showMessage('Vitals logged successfully!', true);
+                    updateModuleProgress('vitals', 1);
+                    form.reset();
+                } catch (error) {
+                    console.error("Error logging vitals:", error);
+                    showMessage('Failed to log vitals. Check console for details.', false);
+                }
+            });
+            updateModuleProgressUI('vitals');
+        }
+        
+        // Helper Functions
+        function updateModuleProgressUI(moduleId) {
+            const module = modules[moduleId];
+            if (module) {
+                const currentProgress = moduleProgress[moduleId] || 0;
+                const progressPercentage = (currentProgress / module.steps) * 100;
+                const progressEl = document.getElementById(`${moduleId}-module-progress`);
+                if (progressEl) {
+                    progressEl.style.width = `${progressPercentage}%`;
+                }
+            }
+        }
+
+        async function updateModuleProgress(moduleId, newProgress) {
+            if (!isAuthReady) return;
+            // Optimistically update the local state first for a responsive UI
+            moduleProgress[moduleId] = newProgress;
+            updateDashboardUI();
+            updateModuleProgressUI(moduleId);
+
+            const userDocRef = doc(db, 'artifacts', appId, 'users', userId);
+            const progressData = {};
+            progressData[`progress.${moduleId}`] = newProgress;
+            
+            try {
+                await setDoc(userDocRef, progressData, { merge: true });
+            } catch(e) {
+                console.error("Error updating progress:", e);
+                // Rollback local state if update fails
+                if (moduleProgress[moduleId]) {
+                    moduleProgress[moduleId] = moduleProgress[moduleId] - 1;
+                }
+                updateDashboardUI();
+                updateModuleProgressUI(moduleId);
+                showMessage("Failed to save progress. Please check your connection.", false);
+            }
+        }
+
+        function showMessage(text, isSuccess) {
+            const el = document.getElementById('message-box');
+            el.textContent = text;
+            el.classList.remove('hidden', 'bg-red-500', 'bg-green-500');
+            el.classList.add(isSuccess ? 'bg-green-500' : 'bg-red-500');
+            setTimeout(() => el.classList.add('hidden'), 3000);
+        }
+        
+        function showModal(contentHtml) {
+            const modalContainer = document.getElementById('modal-container');
+            const modalContent = document.getElementById('modal-content');
+            modalContent.innerHTML = `
+                <h3 class="text-xl font-bold mb-4">New Appointment</h3>
+                <p class="mb-4">${contentHtml}</p>
+                <div class="space-y-4">
+                    <label>Patient Name:</label>
+                    <input type="text" placeholder="Patient Name" class="w-full rounded-lg p-2 border-gray-300" />
+                    <label>Reason for Visit:</label>
+                    <textarea placeholder="Reason" rows="3" class="w-full rounded-lg p-2 border-gray-300"></textarea>
+                </div>
+                <div class="flex justify-end gap-2 mt-4">
+                    <button id="modal-cancel" class="px-4 py-2 text-sm rounded-full font-semibold bg-gray-300 text-gray-700 hover:bg-gray-400">Cancel</button>
+                    <button id="modal-confirm" class="px-4 py-2 text-sm rounded-full font-semibold btn-primary text-white">Save Appointment</button>
+                </div>
+            `;
+            modalContainer.classList.remove('hidden');
+
+            document.getElementById('modal-cancel').onclick = () => {
+                modalContainer.classList.add('hidden');
+            };
+            document.getElementById('modal-confirm').onclick = () => {
+                showMessage('Appointment saved successfully!', true);
+                modalContainer.classList.add('hidden');
+                updateModuleProgress('interactive-calendar', 3);
+            };
+        }
+
+        // Sample Data
+        window.addSampleData = async () => {
+            if (!isAuthReady) {
+                showMessage("Authentication not ready. Please wait a moment.", false);
+                return;
+            }
+            const userDocRef = doc(db, 'artifacts', appId, 'users', userId);
+            const sampleProgress = {
+                'patient-registration': 5,
+                'interactive-calendar': 3,
+                'coding-quiz': 1,
+                'soap-notes': 4,
+                'denial-management': 1,
+                'prior-authorization': 1,
+                'ar-aging': 1,
+                'e-prescribing': 3,
+                'patient-data': 1,
+                'vitals': 1
+            };
+            try {
+                await setDoc(userDocRef, { progress: sampleProgress }, { merge: true });
+                showMessage("Sample data added successfully!", true);
+            } catch (error) {
+                console.error("Error adding sample data:", error);
+                showMessage("Failed to add sample data. Check console for details.", false);
+            }
+        };
+
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-toggle').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('active');
+        });
 
         // Initial setup
         initializeFirebase();
-        showDashboard();
+        renderModule('dashboard');
+
     </script>
 </body>
 </html>
+
