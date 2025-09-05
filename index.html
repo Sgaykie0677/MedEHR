@@ -36,12 +36,31 @@
             padding: 1rem;
             box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
         }
+        .calendar-day {
+            min-height: 100px;
+            position: relative;
+        }
+        .calendar-day.has-appointment {
+            background-color: #d1e4ff;
+        }
+        .appointment-label {
+            position: absolute;
+            bottom: 0.5rem;
+            left: 0.5rem;
+            right: 0.5rem;
+            padding: 0.25rem;
+            font-size: 0.75rem;
+            background-color: #3b82f6;
+            color: white;
+            border-radius: 0.25rem;
+            font-weight: 500;
+        }
     </style>
     <!-- Firebase Libraries -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, setDoc, collection, addDoc, query, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         setLogLevel('debug');
@@ -54,6 +73,9 @@
         let db = null;
         let auth = null;
         let userId = null;
+
+        // Appointments data will be stored here
+        let scheduledAppointments = [];
 
         const initializeFirebase = async () => {
             if (firebaseConfig) {
@@ -68,7 +90,7 @@
                     }
                     userId = auth.currentUser.uid;
                     console.log("Firebase initialized and user authenticated.");
-                    setupRealtimeListener();
+                    setupRealtimeListeners();
                 } catch (error) {
                     console.error("Firebase authentication error:", error);
                 }
@@ -76,7 +98,7 @@
                 console.error("Firebase config is missing.");
             }
         };
-
+        
         const getTrainingDataPath = () => {
             if (!userId) {
                 console.error("User ID not available. Cannot get document path.");
@@ -84,25 +106,67 @@
             }
             return `/artifacts/${appId}/users/${userId}/ehr_training_data/progress`;
         };
+        
+        const getAppointmentsCollectionPath = () => {
+            if (!userId) {
+                console.error("User ID not available. Cannot get collection path.");
+                return null;
+            }
+            return `/artifacts/${appId}/users/${userId}/appointments`;
+        };
 
-        const setupRealtimeListener = () => {
+        const setupRealtimeListeners = () => {
+            // Listener for assignment progress
+            const progressPath = getTrainingDataPath();
+            if (progressPath) {
+                const progressDocRef = doc(db, progressPath);
+                onSnapshot(progressDocRef, (docSnap) => {
+                    const data = docSnap.exists() ? docSnap.data() : { assignments: {} };
+                    updateDashboardProgress(data);
+                    updateAssignmentUI(data);
+                }, (error) => {
+                    console.error("Error listening to Firestore progress:", error);
+                });
+            }
+
+            // Listener for appointments
+            const appointmentsPath = getAppointmentsCollectionPath();
+            if (appointmentsPath) {
+                const appointmentsCollectionRef = collection(db, appointmentsPath);
+                onSnapshot(appointmentsCollectionRef, (querySnapshot) => {
+                    scheduledAppointments = [];
+                    querySnapshot.forEach((doc) => {
+                        scheduledAppointments.push(doc.data());
+                    });
+                    renderCalendar(scheduledAppointments);
+                }, (error) => {
+                    console.error("Error listening to Firestore appointments:", error);
+                });
+            }
+        };
+
+        const saveAssignmentCompletion = async (assignmentId) => {
             const path = getTrainingDataPath();
             if (!db || !path) {
+                console.error("Database not initialized or user not authenticated.");
                 return;
             }
-            const progressDocRef = doc(db, path);
-            onSnapshot(progressDocRef, (docSnap) => {
-                const data = docSnap.exists() ? docSnap.data() : { assignments: {} };
-                updateDashboardProgress(data);
-                updateAssignmentUI(data);
-            }, (error) => {
-                console.error("Error listening to Firestore:", error);
-            });
+            try {
+                const progressDocRef = doc(db, path);
+                const updateData = {
+                    [`assignments.${assignmentId}.completed`]: true,
+                    [`assignments.${assignmentId}.completedAt`]: new Date(),
+                };
+                await setDoc(progressDocRef, updateData, { merge: true });
+                console.log(`Assignment '${assignmentId}' saved successfully.`);
+            } catch (e) {
+                console.error("Error saving document:", e);
+            }
         };
 
         const updateDashboardProgress = (data) => {
             const completedCount = Object.values(data.assignments).filter(status => status.completed).length;
-            const totalAssignments = 6;
+            const totalAssignments = 7;
             const progressText = `You've completed <strong>${completedCount} out of ${totalAssignments}</strong> assignments.`;
             document.getElementById('progress-text').innerHTML = progressText;
             
@@ -162,26 +226,63 @@
             });
         };
 
-        const saveAssignmentCompletion = async (assignmentId) => {
-            const path = getTrainingDataPath();
-            if (!db || !path) {
-                console.error("Database not initialized or user not authenticated.");
-                return;
-            }
-            try {
-                const progressDocRef = doc(db, path);
-                const updateData = {
-                    [`assignments.${assignmentId}.completed`]: true,
-                    [`assignments.${assignmentId}.completedAt`]: new Date(),
-                };
-                await setDoc(progressDocRef, updateData, { merge: true });
-                console.log(`Assignment '${assignmentId}' saved successfully.`);
-            } catch (e) {
-                console.error("Error saving document:", e);
+        window.onload = initializeFirebase;
+
+        // --- CALENDAR FUNCTIONS ---
+        const renderCalendar = (appointments) => {
+            const calendarBody = document.getElementById('calendar-body');
+            calendarBody.innerHTML = '';
+            
+            const today = new Date();
+            const currentMonth = today.getMonth();
+            const currentYear = today.getFullYear();
+
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            const lastDay = new Date(currentYear, currentMonth + 1, 0);
+            
+            let date = 1;
+            for (let i = 0; i < 6; i++) { // Max 6 rows
+                const row = document.createElement('tr');
+                row.classList.add('grid', 'grid-cols-7');
+                for (let j = 0; j < 7; j++) { // 7 days
+                    const cell = document.createElement('td');
+                    cell.classList.add('p-2', 'border', 'border-gray-200', 'text-right', 'relative', 'calendar-day');
+                    if (i === 0 && j < firstDay.getDay()) {
+                        // Empty cells before the first day of the month
+                        cell.classList.add('bg-gray-100');
+                    } else if (date > lastDay.getDate()) {
+                        // Empty cells after the last day of the month
+                        cell.classList.add('bg-gray-100');
+                    } else {
+                        const dayOfMonth = date;
+                        const fullDate = new Date(currentYear, currentMonth, dayOfMonth);
+                        cell.textContent = dayOfMonth;
+
+                        // Check for appointments on this day
+                        const appointmentsOnThisDay = appointments.filter(apt => {
+                            const aptDate = new Date(apt.date);
+                            return aptDate.getFullYear() === currentYear && aptDate.getMonth() === currentMonth && aptDate.getDate() === dayOfMonth;
+                        });
+
+                        if (appointmentsOnThisDay.length > 0) {
+                            cell.classList.add('bg-blue-200', 'has-appointment', 'text-blue-800', 'font-bold');
+                            appointmentsOnThisDay.forEach(apt => {
+                                const appointmentDiv = document.createElement('div');
+                                appointmentDiv.classList.add('appointment-label');
+                                appointmentDiv.textContent = `${apt.time} - ${apt.patientName}`;
+                                cell.appendChild(appointmentDiv);
+                            });
+                        }
+                        date++;
+                    }
+                    row.appendChild(cell);
+                }
+                calendarBody.appendChild(row);
+                if (date > lastDay.getDate()) {
+                    break;
+                }
             }
         };
-
-        window.onload = initializeFirebase;
 
         document.addEventListener('DOMContentLoaded', () => {
             const tabButtons = document.querySelectorAll('button[id$="-tab"]');
@@ -212,11 +313,15 @@
                 });
             });
 
+            // --- ALL FORM SUBMISSION HANDLERS ---
+            // These functions are now async to ensure the Firestore write completes
+            // before the success message is shown.
+
             // Handle Patient Intake Form
             document.getElementById('start-intake-assignment').addEventListener('click', () => {
                 document.getElementById('patient-intake-assignment-form').classList.remove('hidden');
             });
-            document.getElementById('intake-form').addEventListener('submit', (e) => {
+            document.getElementById('intake-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const dob = document.getElementById('dob').value;
                 const reasonForVisit = document.getElementById('reason-for-visit').value;
@@ -226,14 +331,14 @@
                     intakeErrorMessage.classList.remove('hidden');
                     return;
                 }
-                saveAssignmentCompletion('patient-intake-form');
+                await saveAssignmentCompletion('patient-intake-form');
             });
 
             // Handle Vital Signs Form
             document.getElementById('start-vitals-assignment').addEventListener('click', () => {
                 document.getElementById('vitals-assignment-form').classList.remove('hidden');
             });
-            document.getElementById('vitals-form').addEventListener('submit', (e) => {
+            document.getElementById('vitals-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const temp = document.getElementById('temp').value;
                 const bpSystolic = document.getElementById('bp-systolic').value;
@@ -245,15 +350,16 @@
                     vitalsErrorMessage.classList.remove('hidden');
                     return;
                 }
-                saveAssignmentCompletion('vital-signs-form');
+                await saveAssignmentCompletion('vital-signs-form');
             });
 
             // Handle Scheduling Form
             document.getElementById('start-scheduling-assignment').addEventListener('click', () => {
                 document.getElementById('scheduling-assignment-form').classList.remove('hidden');
             });
-            document.getElementById('scheduling-form').addEventListener('submit', (e) => {
+            document.getElementById('scheduling-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
+                const patientName = document.getElementById('patient-search-scheduling').value;
                 const appointmentDate = document.getElementById('appointment-date').value;
                 const appointmentTime = document.getElementById('appointment-time').value;
                 const schedulingErrorMessage = document.getElementById('scheduling-form-error');
@@ -262,14 +368,29 @@
                     schedulingErrorMessage.classList.remove('hidden');
                     return;
                 }
-                saveAssignmentCompletion('patient-scheduling-form');
+
+                // Add appointment to a new Firestore collection
+                const appointmentsCollectionRef = collection(db, getAppointmentsCollectionPath());
+                try {
+                    await addDoc(appointmentsCollectionRef, {
+                        patientName,
+                        date: appointmentDate,
+                        time: appointmentTime,
+                        createdAt: new Date()
+                    });
+                    await saveAssignmentCompletion('patient-scheduling-form');
+                } catch (error) {
+                    console.error("Error scheduling appointment:", error);
+                    schedulingErrorMessage.textContent = 'Failed to schedule appointment. Please try again.';
+                    schedulingErrorMessage.classList.remove('hidden');
+                }
             });
 
             // Handle Lab Order Form
             document.getElementById('start-lab-order-assignment').addEventListener('click', () => {
                 document.getElementById('lab-order-assignment-form').classList.remove('hidden');
             });
-            document.getElementById('lab-order-form').addEventListener('submit', (e) => {
+            document.getElementById('lab-order-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const labTest = document.getElementById('lab-test').value;
                 const labOrderErrorMessage = document.getElementById('lab-order-form-error');
@@ -278,14 +399,14 @@
                     labOrderErrorMessage.classList.remove('hidden');
                     return;
                 }
-                saveAssignmentCompletion('lab-order-form');
+                await saveAssignmentCompletion('lab-order-form');
             });
 
             // Handle Update Demographics Form
             document.getElementById('start-update-demographics').addEventListener('click', () => {
                 document.getElementById('update-demographics-assignment-form').classList.remove('hidden');
             });
-            document.getElementById('update-demographics-form').addEventListener('submit', (e) => {
+            document.getElementById('update-demographics-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const newAddress = document.getElementById('new-address').value;
                 const newPhone = document.getElementById('new-phone').value;
@@ -295,14 +416,14 @@
                     updateDemographicsErrorMessage.classList.remove('hidden');
                     return;
                 }
-                saveAssignmentCompletion('update-demographics-form');
+                await saveAssignmentCompletion('update-demographics-form');
             });
 
             // Handle Document History Form
             document.getElementById('start-document-history').addEventListener('click', () => {
                 document.getElementById('document-history-assignment-form').classList.remove('hidden');
             });
-            document.getElementById('document-history-form').addEventListener('submit', (e) => {
+            document.getElementById('document-history-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const allergies = document.getElementById('allergies-select').value;
                 const pastHistory = document.getElementById('history-select').value;
@@ -312,7 +433,7 @@
                     documentHistoryErrorMessage.classList.remove('hidden');
                     return;
                 }
-                saveAssignmentCompletion('document-history-form');
+                await saveAssignmentCompletion('document-history-form');
             });
             
             // Handle Billing & Coding Form
@@ -320,23 +441,17 @@
                 document.getElementById('billing-assignment-form').classList.remove('hidden');
             });
 
-            document.getElementById('billing-coding-form').addEventListener('submit', (e) => {
+            document.getElementById('billing-coding-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const icd10 = document.getElementById('icd-10-code').value.trim();
                 const cpt = document.getElementById('cpt-code').value.trim();
                 const billingErrorMessage = document.getElementById('billing-form-error');
-
-                // Basic validation: Check if codes are non-empty
                 if (!icd10 || !cpt) {
                     billingErrorMessage.textContent = 'Please enter both an ICD-10 and a CPT code.';
                     billingErrorMessage.classList.remove('hidden');
                     return;
                 }
-                
-                // You can add more complex validation here for specific codes if needed
-                
-                billingErrorMessage.classList.add('hidden');
-                saveAssignmentCompletion('billing-coding-assignment');
+                await saveAssignmentCompletion('billing-coding-assignment');
             });
 
             // Simple search functionality for Patient Management
@@ -508,30 +623,53 @@
             <div class="bg-white p-6 md:p-8 rounded-xl shadow-md">
                 <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-6">Scheduling</h2>
                 <p class="text-lg text-gray-600">Use this module to manage patient appointments. You can view the calendar and add new appointments for existing patients or new walk-ins.</p>
-                <h3 class="text-2xl font-bold text-gray-800 mt-6 mb-4">Assignment: Schedule an Appointment</h3>
-                <p class="text-gray-600 mb-4">Your task is to schedule an appointment for **Michael Rodriguez** for a follow-up visit. The doctor's next available slot is **October 26th, 2025 at 2:30 PM**.</p>
-                <button id="start-scheduling-assignment" class="bg-green-600 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-green-700 transition duration-300">Start Scheduling Assignment</button>
                 
-                <div id="scheduling-assignment-form" class="mt-8 hidden">
-                    <form id="scheduling-form" class="space-y-4">
-                        <div>
-                            <label for="patient-search-scheduling" class="block text-sm font-medium text-gray-700">Patient</label>
-                            <input type="text" id="patient-search-scheduling" value="Michael Rodriguez" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-gray-100" readonly>
+                <!-- Calendar View -->
+                <div class="mt-8">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Appointment Calendar</h3>
+                    <div class="bg-gray-50 p-4 rounded-lg shadow-inner">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="text-xl font-semibold text-gray-700">September 2025</h4>
                         </div>
-                        <div>
-                            <label for="appointment-date" class="block text-sm font-medium text-gray-700">Appointment Date</label>
-                            <input type="date" id="appointment-date" name="appointment-date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" required>
+                        <table class="w-full">
+                            <thead>
+                                <tr class="text-gray-500 text-sm font-semibold grid grid-cols-7">
+                                    <th>Sun</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th>
+                                </tr>
+                            </thead>
+                            <tbody id="calendar-body" class="w-full">
+                                <!-- Calendar days will be dynamically rendered here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="assignment-panel rounded-lg mt-8">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Assignment: Schedule an Appointment</h3>
+                    <p class="text-gray-600 mb-4">Your task is to schedule an appointment for **Michael Rodriguez** for a follow-up visit. The doctor's next available slot is **October 26th, 2025 at 2:30 PM**.</p>
+                    <button id="start-scheduling-assignment" class="bg-green-600 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-green-700 transition duration-300">Start Scheduling Assignment</button>
+                    
+                    <div id="scheduling-assignment-form" class="mt-8 hidden">
+                        <form id="scheduling-form" class="space-y-4">
+                            <div>
+                                <label for="patient-search-scheduling" class="block text-sm font-medium text-gray-700">Patient</label>
+                                <input type="text" id="patient-search-scheduling" value="Michael Rodriguez" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 bg-gray-100" readonly>
+                            </div>
+                            <div>
+                                <label for="appointment-date" class="block text-sm font-medium text-gray-700">Appointment Date</label>
+                                <input type="date" id="appointment-date" name="appointment-date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" required>
+                            </div>
+                            <div>
+                                <label for="appointment-time" class="block text-sm font-medium text-gray-700">Appointment Time</label>
+                                <input type="time" id="appointment-time" name="appointment-time" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" required>
+                            </div>
+                            <div id="scheduling-form-error" class="text-red-500 font-medium hidden"></div>
+                            <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg hover:bg-blue-700 transition duration-300">Schedule Appointment</button>
+                        </form>
+                        <div id="scheduling-success-message" class="form-feedback hidden mt-6 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 rounded-md">
+                            <p class="font-bold">Assignment Complete!</p>
+                            <p>You have successfully scheduled the appointment for Michael Rodriguez. The appointment is confirmed for October 26th, 2025 at 2:30 PM.</p>
                         </div>
-                        <div>
-                            <label for="appointment-time" class="block text-sm font-medium text-gray-700">Appointment Time</label>
-                            <input type="time" id="appointment-time" name="appointment-time" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2" required>
-                        </div>
-                        <div id="scheduling-form-error" class="text-red-500 font-medium hidden"></div>
-                        <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg hover:bg-blue-700 transition duration-300">Schedule Appointment</button>
-                    </form>
-                    <div id="scheduling-success-message" class="form-feedback hidden mt-6 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 rounded-md">
-                        <p class="font-bold">Assignment Complete!</p>
-                        <p>You have successfully scheduled the appointment for Michael Rodriguez. The appointment is confirmed for October 26th, 2025 at 2:30 PM.</p>
                     </div>
                 </div>
             </div>
