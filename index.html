@@ -857,10 +857,15 @@
             const form = document.getElementById('pr-form');
             let currentStep = moduleProgress['patient-registration'] || 0;
             const currentStepEl = form.querySelector(`[data-step="${currentStep + 1}"]`);
-            if (currentStepEl && currentStepEl.querySelector('input, textarea, select').reportValidity()) {
-                const nextStepIndex = currentStep + 1;
-                updateModuleProgress('patient-registration', nextStepIndex);
-                showFormStep(form, nextStepIndex);
+            if (currentStepEl) {
+                const input = currentStepEl.querySelector('input, textarea');
+                if (input && input.value.trim() !== '') {
+                    const nextStepIndex = currentStep + 1;
+                    updateModuleProgress('patient-registration', nextStepIndex);
+                    showFormStep(form, nextStepIndex);
+                } else {
+                    showMessage("Please fill out this field to continue.", false);
+                }
             }
         });
 
@@ -869,10 +874,15 @@
             const form = document.getElementById('ic-form');
             let currentStep = moduleProgress['interactive-calendar'] || 0;
             const currentStepEl = form.querySelector(`[data-step="${currentStep + 1}"]`);
-            if (currentStepEl && currentStepEl.querySelector('input, textarea, select').reportValidity()) {
-                const nextStepIndex = currentStep + 1;
-                updateModuleProgress('interactive-calendar', nextStepIndex);
-                showFormStep(form, nextStepIndex);
+            if (currentStepEl) {
+                const input = currentStepEl.querySelector('input, textarea');
+                if (input && input.value.trim() !== '') {
+                    const nextStepIndex = currentStep + 1;
+                    updateModuleProgress('interactive-calendar', nextStepIndex);
+                    showFormStep(form, nextStepIndex);
+                } else {
+                    showMessage("Please fill out this field to continue.", false);
+                }
             }
         });
 
@@ -881,10 +891,15 @@
             const form = document.getElementById('sn-form');
             let currentStep = moduleProgress['soap-notes'] || 0;
             const currentStepEl = form.querySelector(`[data-step="${currentStep + 1}"]`);
-            if (currentStepEl && currentStepEl.querySelector('textarea').reportValidity()) {
-                const nextStepIndex = currentStep + 1;
-                updateModuleProgress('soap-notes', nextStepIndex);
-                showFormStep(form, nextStepIndex);
+            if (currentStepEl) {
+                const input = currentStepEl.querySelector('textarea');
+                if (input && input.value.trim() !== '') {
+                    const nextStepIndex = currentStep + 1;
+                    updateModuleProgress('soap-notes', nextStepIndex);
+                    showFormStep(form, nextStepIndex);
+                } else {
+                    showMessage("Please fill out this field to continue.", false);
+                }
             }
         });
 
@@ -935,10 +950,20 @@
             const form = document.getElementById('ep-form');
             let currentStep = moduleProgress['e-prescribing'] || 0;
             const currentStepEl = form.querySelector(`[data-step="${currentStep + 1}"]`);
-            if (currentStepEl && currentStepEl.querySelector('input, textarea, select').reportValidity()) {
-                const nextStepIndex = currentStep + 1;
-                updateModuleProgress('e-prescribing', nextStepIndex);
-                showFormStep(form, nextStepIndex);
+            if (currentStepEl) {
+                const inputs = currentStepEl.querySelectorAll('input, select');
+                let isValid = true;
+                inputs.forEach(input => {
+                    if (!input.value.trim()) {
+                        isValid = false;
+                        showMessage("Please fill out all fields to continue.", false);
+                    }
+                });
+                if (isValid) {
+                    const nextStepIndex = currentStep + 1;
+                    updateModuleProgress('e-prescribing', nextStepIndex);
+                    showFormStep(form, nextStepIndex);
+                }
             }
         });
 
