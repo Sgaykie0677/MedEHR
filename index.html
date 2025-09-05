@@ -85,6 +85,7 @@
                 <li><a href="#" class="block py-2 px-4 rounded-lg text-gray-300 hover:bg-gray-700/50 transition-colors" onclick="showModule('ar-aging')">A/R Aging</a></li>
                 <li><a href="#" class="block py-2 px-4 rounded-lg text-gray-300 hover:bg-gray-700/50 transition-colors" onclick="showModule('e-prescribing')">E-Prescribing</a></li>
                 <li><a href="#" class="block py-2 px-4 rounded-lg text-gray-300 hover:bg-gray-700/50 transition-colors" onclick="showModule('patient-data')">Patient Data</a></li>
+                <li><a href="#" class="block py-2 px-4 rounded-lg text-gray-300 hover:bg-gray-700/50 transition-colors" onclick="showModule('vitals')">Vitals</a></li>
             </ul>
         </nav>
     </div>
@@ -184,6 +185,15 @@
                         </div>
                         <p id="pd-status" class="text-sm text-gray-500 mt-2">0/1 scenario complete</p>
                         <button onclick="showModule('patient-data')" class="mt-4 px-4 py-2 text-sm rounded-full font-semibold btn-primary text-white">Start</button>
+                    </div>
+                    <div class="card bg-white p-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-2">Vitals</h3>
+                        <p class="text-gray-600 mb-4">Log a patient's vital signs.</p>
+                        <div class="bg-gray-200 rounded-full progress-bar">
+                            <div id="vitals-progress" class="bg-blue-500 rounded-full progress-bar transition-all" style="width: 0%;"></div>
+                        </div>
+                        <p id="vitals-status" class="text-sm text-gray-500 mt-2">0/1 steps complete</p>
+                        <button onclick="showModule('vitals')" class="mt-4 px-4 py-2 text-sm rounded-full font-semibold btn-primary text-white">Start</button>
                     </div>
                 </div>
                 <div class="mt-8">
@@ -475,6 +485,38 @@
                         </form>
                     </div>
                 </div>
+
+                <!-- Vitals Module -->
+                <div id="vitals" class="hidden">
+                    <h2 class="text-2xl font-bold mb-4">Vitals</h2>
+                    <p class="text-gray-600 mb-4">Enter a patient's vital signs and save the data.</p>
+                    <div class="bg-gray-200 rounded-full progress-bar mb-4">
+                        <div id="vitals-module-progress" class="bg-blue-500 rounded-full progress-bar transition-all" style="width: 0%;"></div>
+                    </div>
+                    <form id="vitals-form" class="space-y-4 bg-white p-6 rounded-lg shadow-md">
+                        <div class="input-group">
+                            <label>Patient Name</label>
+                            <input type="text" placeholder="Patient Name" name="patient-name" class="rounded-lg p-2 w-full" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Temperature ($^{\circ}F$)</label>
+                            <input type="number" placeholder="e.g., 98.6" name="temperature" step="0.1" class="rounded-lg p-2 w-full" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Blood Pressure (mmHg)</label>
+                            <input type="text" placeholder="e.g., 120/80" name="blood-pressure" class="rounded-lg p-2 w-full" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Heart Rate (bpm)</label>
+                            <input type="number" placeholder="e.g., 75" name="heart-rate" class="rounded-lg p-2 w-full" required>
+                        </div>
+                        <button type="submit" class="px-6 py-3 bg-blue-600 text-white font-medium rounded-full shadow-md hover:bg-blue-700 transition-colors">Save Vitals</button>
+                    </form>
+                    <div id="vitals-success" class="bg-green-100 text-green-700 p-4 rounded-lg mt-4 hidden">
+                        <p>Vitals logged successfully!</p>
+                        <button onclick="showDashboard()" class="mt-4 text-sm font-semibold text-blue-600 hover:underline">Return to Dashboard</button>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
@@ -577,6 +619,15 @@
                 progressKey: 'pd-progress',
                 statusId: 'pd-status',
                 progressEl: 'pd-module-progress'
+            },
+            'vitals': {
+                steps: 1,
+                progressKey: 'vitals-progress',
+                formId: 'vitals-form',
+                statusId: 'vitals-status',
+                progressEl: 'vitals-module-progress',
+                nextBtnId: 'vitals-next-btn',
+                successEl: 'vitals-success'
             }
         };
 
@@ -726,6 +777,9 @@
         document.getElementById('add-patient-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const form = e.target;
+            if (!form.reportValidity()) {
+                return;
+            }
             const patientData = {
                 name: form.name.value,
                 dob: form.dob.value,
@@ -764,6 +818,9 @@
                 showFormStep(form, currentStep);
                 updateModuleProgress(moduleId, currentStep);
             }
+            if (moduleId === 'vitals') {
+                updateModuleProgress('vitals', 0); // Reset progress for a new submission
+            }
         };
 
         function showFormStep(form, stepIndex) {
@@ -799,13 +856,11 @@
         document.getElementById('pr-next-btn').addEventListener('click', () => {
             const form = document.getElementById('pr-form');
             let currentStep = moduleProgress['patient-registration'] || 0;
-            const nextStepIndex = currentStep + 1;
-
-            if (form.querySelector(`[data-step="${currentStep + 1}"]`).checkValidity()) {
+            const currentStepEl = form.querySelector(`[data-step="${currentStep + 1}"]`);
+            if (currentStepEl && currentStepEl.querySelector('input, textarea, select').reportValidity()) {
+                const nextStepIndex = currentStep + 1;
                 updateModuleProgress('patient-registration', nextStepIndex);
                 showFormStep(form, nextStepIndex);
-            } else {
-                form.querySelector(`[data-step="${currentStep + 1}"]`).reportValidity();
             }
         });
 
@@ -813,13 +868,11 @@
         document.getElementById('ic-next-btn').addEventListener('click', () => {
             const form = document.getElementById('ic-form');
             let currentStep = moduleProgress['interactive-calendar'] || 0;
-            const nextStepIndex = currentStep + 1;
-
-            if (form.querySelector(`[data-step="${currentStep + 1}"]`).checkValidity()) {
+            const currentStepEl = form.querySelector(`[data-step="${currentStep + 1}"]`);
+            if (currentStepEl && currentStepEl.querySelector('input, textarea, select').reportValidity()) {
+                const nextStepIndex = currentStep + 1;
                 updateModuleProgress('interactive-calendar', nextStepIndex);
                 showFormStep(form, nextStepIndex);
-            } else {
-                form.querySelector(`[data-step="${currentStep + 1}"]`).reportValidity();
             }
         });
 
@@ -827,20 +880,18 @@
         document.getElementById('sn-next-btn').addEventListener('click', () => {
             const form = document.getElementById('sn-form');
             let currentStep = moduleProgress['soap-notes'] || 0;
-            const nextStepIndex = currentStep + 1;
-
-            if (form.querySelector(`[data-step="${currentStep + 1}"]`).checkValidity()) {
-                updateModuleProgress('sn-notes', nextStepIndex);
+            const currentStepEl = form.querySelector(`[data-step="${currentStep + 1}"]`);
+            if (currentStepEl && currentStepEl.querySelector('textarea').reportValidity()) {
+                const nextStepIndex = currentStep + 1;
+                updateModuleProgress('soap-notes', nextStepIndex);
                 showFormStep(form, nextStepIndex);
-            } else {
-                form.querySelector(`[data-step="${currentStep + 1}"]`).reportValidity();
             }
         });
 
         // Denial Management Module Logic
         document.getElementById('dm-next-btn').addEventListener('click', () => {
             const form = document.getElementById('dm-form');
-            if (form.checkValidity()) {
+            if (form.reportValidity()) {
                 if (form.elements['dm-answer'].value === modules['denial-management'].answer) {
                     updateModuleProgress('denial-management', 1);
                     form.style.display = 'none';
@@ -854,7 +905,7 @@
         // Prior Authorization Module Logic
         document.getElementById('pa-next-btn').addEventListener('click', () => {
             const form = document.getElementById('pa-form');
-            if (form.checkValidity()) {
+            if (form.reportValidity()) {
                 if (form.elements['pa-answer'].value === modules['prior-authorization'].answer) {
                     updateModuleProgress('prior-authorization', 1);
                     form.style.display = 'none';
@@ -868,7 +919,7 @@
         // A/R Aging Module Logic
         document.getElementById('ar-next-btn').addEventListener('click', () => {
             const form = document.getElementById('ar-form');
-            if (form.checkValidity()) {
+            if (form.reportValidity()) {
                 if (form.elements['ar-answer'].value === modules['ar-aging'].answer) {
                     updateModuleProgress('ar-aging', 1);
                     form.style.display = 'none';
@@ -883,13 +934,11 @@
         document.getElementById('ep-next-btn').addEventListener('click', () => {
             const form = document.getElementById('ep-form');
             let currentStep = moduleProgress['e-prescribing'] || 0;
-            const nextStepIndex = currentStep + 1;
-
-            if (form.querySelector(`[data-step="${currentStep + 1}"]`).checkValidity()) {
+            const currentStepEl = form.querySelector(`[data-step="${currentStep + 1}"]`);
+            if (currentStepEl && currentStepEl.querySelector('input, textarea, select').reportValidity()) {
+                const nextStepIndex = currentStep + 1;
                 updateModuleProgress('e-prescribing', nextStepIndex);
                 showFormStep(form, nextStepIndex);
-            } else {
-                form.querySelector(`[data-step="${currentStep + 1}"]`).reportValidity();
             }
         });
 
@@ -905,6 +954,35 @@
             });
             epSelect.value = currentSelected;
         }
+        
+        // Vitals Module Logic
+        document.getElementById('vitals-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            if (!form.reportValidity()) {
+                return;
+            }
+            const vitalsData = {
+                patientName: form['patient-name'].value,
+                temperature: form.temperature.value,
+                bloodPressure: form['blood-pressure'].value,
+                heartRate: form['heart-rate'].value,
+                timestamp: new Date().toISOString()
+            };
+            const vitalsCollection = collection(db, 'artifacts', appId, 'users', userId, 'vitals');
+            try {
+                await addDoc(vitalsCollection, vitalsData);
+                showMessage('Vitals logged successfully!', true);
+                updateModuleProgress('vitals', 1);
+                form.style.display = 'none';
+                document.getElementById('vitals-success').classList.remove('hidden');
+                form.reset();
+            } catch (error) {
+                console.error("Error logging vitals:", error);
+                showMessage('Failed to log vitals. Check console for details.', false);
+            }
+        });
+
 
         // Sample Data & Firebase Logic
         window.addSampleData = async () => {
@@ -922,7 +1000,8 @@
                 'prior-authorization': 1,
                 'ar-aging': 1,
                 'e-prescribing': 3,
-                'patient-data': 1
+                'patient-data': 1,
+                'vitals': 1
             };
             try {
                 await setDoc(userDocRef, { progress: sampleProgress }, { merge: true });
