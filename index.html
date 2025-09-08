@@ -1,737 +1,734 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EHR & Medical Office Training</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-body {
-    font-family: 'Inter', sans-serif;
-    background-color: #f3f4f6;
-    min-height: 100vh;
-}
-.ehr-card {
-    @apply bg-white p-8 rounded-xl shadow-lg transform transition-all duration-300 hover:shadow-xl;
-}
-.calendar-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 1px;
-    background-color: #e5e7eb;
-    border-radius: 0.75rem;
-    overflow: hidden;
-}
-.calendar-cell {
-    @apply p-4 text-center bg-white cursor-pointer hover:bg-indigo-100 transition-colors duration-200;
-}
-.header-cell {
-    @apply font-semibold text-gray-700 bg-gray-200;
-}
-.appointment-cell {
-    @apply bg-indigo-500 text-white font-bold;
-}
-.ar-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.9rem;
-}
-.ar-table th, .ar-table td {
-    padding: 12px;
-    text-align: left;
-    border-bottom: 1px solid #e5e7eb;
-}
-.ar-table th {
-    background-color: #f9fafb;
-    font-weight: 600;
-    color: #4b5563;
-}
-.ar-table tbody tr:hover {
-    background-color: #f3f4f6;
-}
-</style>
+  <meta charset="UTF-8">
+  <title>Medical Office Training Notebook</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background: #f8f9ff; }
+    header { background: #006d77; color: #fff; padding: 1rem 2rem; font-size: 2rem; letter-spacing: .03em; font-weight: bold;}
+    nav { background: #edf6f9; padding: 0.5rem 2rem; display: flex; flex-wrap: wrap; gap: 0.7rem; }
+    nav button { background: #00b4d8; color: #fff; border: none; border-radius: 5px; padding: 0.4rem 1.2rem; margin: 0.1rem; cursor: pointer; transition: background 0.2s;}
+    nav button:hover, nav button.active { background: #03045e; }
+    main { max-width: 850px; margin: 2rem auto; background: #fff; border-radius: 8px; box-shadow: 0 4px 16px #b5c8e6a1; padding: 2rem; }
+    section { display: none; }
+    section.active { display: block; }
+    h2 { color: #264653; margin-top: 0; }
+    .scenario { background: #e9f7ef; color: #20504f; border-left: 4px solid #00b4d8; padding: 1rem; border-radius: 4px; font-size: 1.1rem; margin-bottom: 1.2rem;}
+    form { margin-bottom: 1.2rem; }
+    label { display: block; margin-top: 1rem; margin-bottom: 0.4rem; font-weight: bold;}
+    input, select, textarea { width: 100%; padding: 0.6em; border: 1px solid #b5c8e6; border-radius: 4px; margin-bottom: 0.5em;}
+    input[type="file"] { width: auto; }
+    input[type="checkbox"], input[type="radio"] { width: auto; margin-right: 0.4em;}
+    .feedback { background: #d8f3dc; border-left: 4px solid #43aa8b; color: #155724; padding: 1rem; margin-bottom: 1rem; border-radius: 4px; font-size: 1.07em; display: none;}
+    .error { background: #ffe1e1 !important; border-color: #bc4749 !important; color: #b1001c !important;}
+    table { border-collapse: collapse; margin-top: 1.3em; width: 100%; }
+    th, td { border: 1px solid #c0d6e4; padding: 0.7em; text-align: left; }
+    th { background: #caf0f8; }
+    .dashboard-card { display: inline-block; width: 190px; margin: 0.7em 1.2em 1.2em 0; background: #f1faee; border-radius: 8px; box-shadow: 0 2px 7px #b5c8e674; padding: 1em 1em 0.7em 1em; }
+    .dashboard-card h4 {margin:0 0 0.5em 0;}
+    .small-btn { font-size: 0.9em; color: #0077b6; background: #fff; border: 1px solid #b5c8e6; border-radius: 4px; margin-top: 0.5em; margin-bottom: 0.5em;}
+    .small-btn:active { background: #90e0ef; }
+    .hidden {display: none;}
+    .module-reset { background: none; color: #888; font-size: 0.92em; margin-left: 0.6em; border: none; cursor: pointer; text-decoration: underline;}
+    .dashboard-avatar { width: 32px; height: 32px; border-radius: 50%; background: #aad8d3; display: inline-block; vertical-align: middle; margin-right: 0.8em;}
+    @media (max-width: 700px) {
+      main { padding: 0.6em; }
+      .dashboard-card { width: 99%; display: block; margin: 1.2em auto;}
+    }
+  </style>
 </head>
-<body class="p-6">
-<div class="max-w-6xl mx-auto space-y-8">
-    <header class="text-center">
-        <h1 class="text-4xl font-bold text-gray-900">EHR & Medical Office Training</h1>
-        <p class="text-lg text-gray-500 mt-2">Your guided journey to a professional career.</p>
-        <div id="user-info" class="mt-4 text-sm text-gray-500">
-            <p>Ready to begin!</p>
+<body>
+  <header>
+    Medical Office Training Notebook
+  </header>
+  <nav id="mainNav">
+    <button data-module="dashboard" class="active">Dashboard</button>
+    <button data-module="registration">Patient Registration</button>
+    <button data-module="appointment">Appointment Scheduling</button>
+    <button data-module="soap">SOAP Notes</button>
+    <button data-module="insurance">Insurance Verification</button>
+    <button data-module="messaging">Provider Messaging</button>
+    <button data-module="documents">Document Upload</button>
+    <button data-module="labs">Lab Orders</button>
+    <button data-module="reports">Productivity Reports</button>
+    <button data-module="career">Career Path Tracker</button>
+    <button data-module="appeals">Appeals Management</button>
+    <button data-module="audit">Audit Simulation</button>
+    <button data-module="compliance">Compliance Review</button>
+    <button data-module="workflows">Advanced Workflows</button>
+  </nav>
+  <main>
+    <!-- DASHBOARD MODULE -->
+    <section id="dashboard" class="active">
+      <h2>Role-Based Dashboard</h2>
+      <div class="scenario">
+        <strong>Scenario:</strong> You are a medical office coordinator responsible for managing daily operations. Use the dashboard to quickly access key tasks, view upcoming appointments, review outstanding messages and reports, and track your training progress.
+      </div>
+      <div style="display:flex; flex-wrap: wrap; gap:0.5em;">
+        <div class="dashboard-card">
+          <div class="dashboard-avatar"></div>
+          <h4>Today's Appointments</h4>
+          <div id="dashboard-appointments"></div>
+          <button class="small-btn" onclick="showModule('appointment')">Schedule</button>
         </div>
-    </header>
-    <div id="loading-spinner" class="flex justify-center items-center h-48 hidden">
-        <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-indigo-500"></div>
-    </div>
-    <div id="dashboard-view" class="space-y-6">
-        <div class="ehr-card flex items-center justify-between">
-            <div>
-                <h2 class="text-2xl font-semibold text-gray-800">Your Progress</h2>
-                <p class="text-gray-500">Overview of your learning journey.</p>
-            </div>
-            <div class="w-1/2">
-                <div class="w-full bg-gray-200 rounded-full h-4">
-                    <div id="overall-progress-bar" class="bg-teal-500 rounded-full h-4 transition-all duration-500" style="width: 0%;"></div>
-                </div>
-                <p id="overall-progress-text" class="text-sm text-gray-500 mt-1 text-right">0% Complete</p>
-            </div>
+        <div class="dashboard-card">
+          <div class="dashboard-avatar" style="background: #edeec9;"></div>
+          <h4>Patient Registrations</h4>
+          <div id="dashboard-patients"></div>
+          <button class="small-btn" onclick="showModule('registration')">Register</button>
         </div>
-        <div id="modules-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            </div>
-    </div>
-    <div id="module-view" class="space-y-6 hidden">
-        <button id="back-to-dashboard-btn" class="flex items-center text-indigo-600 hover:text-indigo-800 font-medium">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
-            </svg>
-            Back to Dashboard
-        </button>
-        <div class="ehr-card">
-            <h2 id="module-title" class="text-3xl font-bold text-gray-900 mb-2"></h2>
-            <div class="w-full bg-gray-200 rounded-full h-3">
-                <div id="module-progress-bar" class="bg-indigo-500 h-3 rounded-full transition-all duration-500" style="width: 0%;"></div>
-            </div>
-            <p id="module-progress-text" class="text-sm text-gray-500 mt-1 text-right">0% Complete</p>
+        <div class="dashboard-card">
+          <div class="dashboard-avatar" style="background: #ffe59e;"></div>
+          <h4>Provider Messages</h4>
+          <div id="dashboard-messages"></div>
+          <button class="small-btn" onclick="showModule('messaging')">Inbox</button>
         </div>
-        <div id="module-content" class="ehr-card">
-            </div>
-        <div id="action-buttons" class="flex justify-between items-center mt-6">
-            <button id="prev-step-btn" class="px-6 py-2 bg-gray-200 text-gray-800 rounded-full font-medium transition-colors duration-200 hover:bg-gray-300">Previous</button>
-            <button id="next-step-btn" class="px-6 py-2 bg-indigo-600 text-white rounded-full font-medium transition-colors duration-200 hover:bg-indigo-700">Next</button>
-            <button id="submit-quiz-btn" class="px-6 py-2 bg-green-600 text-white rounded-full font-medium transition-colors duration-200 hover:bg-green-700 hidden">Submit Quiz</button>
+        <div class="dashboard-card">
+          <div class="dashboard-avatar" style="background: #fae0e4;"></div>
+          <h4>Productivity</h4>
+          <div id="dashboard-productivity"></div>
+          <button class="small-btn" onclick="showModule('reports')">View Reports</button>
         </div>
-    </div>
-</div>
-<script>
-    let state = {
-        currentView: 'dashboard',
-        activeModuleId: null,
-        currentStepIndex: 0,
-        userProgress: {}
-    };
+      </div>
+      <div style="margin-top:2em;"><strong>Quick Navigation:</strong> Click any module in the navigation bar above to practice workbook scenarios.</div>
+    </section>
 
-    const modules = [
-        {
-            id: 'patient-registration',
-            title: 'Patient Registration & Onboarding',
-            description: 'A guided simulation of a new patient registration workflow.',
-            difficulty: 'Beginner',
-            estimatedTime: '20 min',
-            icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0a4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>`,
-            steps: [
-                {
-                    title: 'Case Study: Eleanor Vance',
-                    instruction: `Welcome to the Patient Registration module. Your goal is to accurately enter a new patient's demographic information into the simulated EHR.
+    <!-- PATIENT REGISTRATION MODULE -->
+    <section id="registration">
+      <h2>Patient Registration Module</h2>
+      <div class="scenario">
+        <strong>Scenario:</strong> A new patient arrives at your clinic. Register them into the system, ensuring all required fields are properly completed. Pay special attention to collecting accurate contact and emergency details.
+      </div>
+      <form id="registrationForm" autocomplete="off">
+        <label>Full Name <span style="color:#ba181b;">*</span></label>
+        <input type="text" id="regName" required>
+        <label>Date of Birth <span style="color:#ba181b;">*</span></label>
+        <input type="date" id="regDOB" required>
+        <label>Gender</label>
+        <select id="regGender">
+          <option value="Unspecified">Unspecified</option>
+          <option>Female</option>
+          <option>Male</option>
+          <option>Other</option>
+        </select>
+        <label>Phone Number</label>
+        <input type="tel" id="regPhone" pattern="^[0-9\-\+()\s]{7,20}$" placeholder="(123) 456-7890">
+        <label>Email Address</label>
+        <input type="email" id="regEmail" placeholder="you@email.com">
+        <label>Address</label>
+        <input type="text" id="regAddress">
+        <label>Insurance Provider</label>
+        <input type="text" id="regInsurance">
+        <label>Emergency Contact Name <span style="color:#ba181b;">*</span></label>
+        <input type="text" id="regEmerName" required>
+        <label>Emergency Contact Number <span style="color:#ba181b;">*</span></label>
+        <input type="tel" id="regEmerPhone" required>
+        <button type="submit">Submit Registration</button>
+        <button class="module-reset" onclick="resetModule(event,'registrationForm','regFeedback')">Reset</button>
+      </form>
+      <div class="feedback" id="regFeedback"></div>
+    </section>
 
-                    Patient details:
-                    <ul class="list-disc list-inside mt-2 space-y-1">
-                        <li>**Name:** Eleanor Vance</li>
-                        <li>**Date of Birth:** May 15, 1988</li>
-                        <li>**Gender:** Female</li>
-                        <li>**Phone:** 555-123-4567</li>
-                        <li>**Email:** evance@email.com</li>
-                        <li>**Address:** 123 Main St, Anytown, USA 12345</li>
-                    </ul>
+    <!-- APPOINTMENT SCHEDULING MODULE -->
+    <section id="appointment">
+      <h2>Appointment Scheduling Module</h2>
+      <div class="scenario">
+        <strong>Scenario:</strong> A registered patient contacts the office requesting an appointment with Dr. Lee for next Thursday at 10:00 AM. Use the scheduling form to check availability and schedule their appointment.
+      </div>
+      <form id="appointmentForm" autocomplete="off">
+        <label>Patient Name <span style="color:#ba181b;">*</span></label>
+        <input type="text" id="apptName" required>
+        <label>Provider</label>
+        <select id="apptProvider">
+          <option>Dr. Lee</option>
+          <option>Dr. Morgan</option>
+          <option>Dr. Patel</option>
+        </select>
+        <label>Preferred Date <span style="color:#ba181b;">*</span></label>
+        <input type="date" id="apptDate" required>
+        <label>Preferred Time</label>
+        <input type="time" id="apptTime" required>
+        <label>Reason for Visit</label>
+        <input type="text" id="apptReason">
+        <button type="submit">Schedule Appointment</button>
+        <button class="module-reset" onclick="resetModule(event,'appointmentForm','apptFeedback')">Reset</button>
+      </form>
+      <div class="feedback" id="apptFeedback"></div>
+      <table id="apptTable" class="hidden">
+        <thead><tr><th>Date</th><th>Time</th><th>Patient</th><th>Provider</th><th>Reason</th></tr></thead>
+        <tbody id="apptList"></tbody>
+      </table>
+    </section>
 
-                    We will walk through the process step-by-step.`,
-                    type: 'tutorial'
-                },
-                {
-                    title: 'Step 1: Patient Demographics',
-                    instruction: 'Begin by filling out the patient\'s personal information. Use the case study details provided on the previous screen to complete this form.',
-                    type: 'form',
-                    formFields: [
-                        {id: 'firstName', label: 'First Name', type: 'text', placeholder: 'Eleanor'},
-                        {id: 'lastName', label: 'Last Name', type: 'text', placeholder: 'Vance'},
-                        {id: 'dob', label: 'Date of Birth', type: 'date', placeholder: 'YYYY-MM-DD'},
-                        {id: 'gender', label: 'Gender', type: 'select', options: ['Female', 'Male', 'Other', 'Prefer not to say']}
-                    ]
-                },
-                {
-                    title: 'Step 2: Contact Information',
-                    instruction: 'Now, enter the patient\'s contact and address information. Refer back to the case study if needed.',
-                    type: 'form',
-                    formFields: [
-                        {id: 'phone', label: 'Phone Number', type: 'tel', placeholder: '555-123-4567'},
-                        {id: 'email', label: 'Email Address', type: 'email', placeholder: 'evance@email.com'},
-                        {id: 'address', label: 'Street Address', type: 'text', placeholder: '123 Main St, Anytown, USA 12345'}
-                    ]
-                },
-                {
-                    title: 'Step 3: Submit & Review',
-                    instruction: 'You have completed the data entry. This is a crucial step in real-world scenarios to prevent errors.',
-                    type: 'tutorial'
-                },
-                {
-                    title: 'Assessment',
-                    instruction: 'Congratulations, you have completed the training simulation! Now, test your knowledge with this quick quiz.',
-                    type: 'quiz',
-                    questions: [
-                        {
-                            question: 'Why is accurate patient registration important?',
-                            options: ['It prevents spelling errors.', 'It ensures correct billing and patient safety.', 'It is required for HIPAA compliance.', 'It helps patients find their way to the clinic.'],
-                            answer: 'It ensures correct billing and patient safety.'
-                        },
-                        {
-                            question: 'What is the most common reason for a denied claim related to patient demographics?',
-                            options: ['Typo in the street name.', 'Missing or incorrect Date of Birth.', 'Incorrect phone number.', 'Patient prefers to be called by a nickname.'],
-                            answer: 'Missing or incorrect Date of Birth.'
-                        }
-                    ]
-                },
-                {
-                    title: 'Module Complete!',
-                    instruction: 'You have successfully completed this module. Your progress has been updated, and you are one step closer to certification!',
-                    type: 'complete'
-                }
-            ]
-        },
-        {
-            id: 'appointment-scheduling',
-            title: 'Interactive Calendar & Scheduling',
-            description: 'Practice booking a patient appointment using the office calendar.',
-            difficulty: 'Beginner',
-            estimatedTime: '15 min',
-            icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-sky-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h8M3 15h18M3 21h18M3 10a2 2 0 012-2h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2v-10z" /></svg>`,
-            steps: [
-                {
-                    title: 'Introduction to Scheduling',
-                    instruction: 'This module simulates a scheduling workflow. You need to find an open slot and book an appointment for Dr. Smith\'s patient.',
-                    type: 'tutorial'
-                },
-                {
-                    title: 'Find an Open Slot',
-                    instruction: 'Find the first available time slot for Thursday, the 17th. Click on the cell to book the appointment.',
-                    type: 'calendar',
-                    bookingTarget: 'Thursday 17'
-                },
-                {
-                    title: 'Confirm Appointment',
-                    instruction: 'You have successfully selected the time slot. Click next to continue.',
-                    type: 'tutorial'
-                },
-                {
-                    title: 'Module Complete!',
-                    instruction: 'You have successfully completed the scheduling module. You can now return to the dashboard.',
-                    type: 'complete'
-                }
-            ]
-        },
-        {
-            id: 'coding-quiz',
-            title: 'Medical Coding Quiz',
-            description: 'Test your knowledge of common medical coding principles.',
-            difficulty: 'Intermediate',
-            estimatedTime: '10 min',
-            icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l-4 4-4-4M6 16l-4-4 4-4" /></svg>`,
-            steps: [
-                {
-                    title: 'Introduction to Coding',
-                    instruction: 'This quiz will test your knowledge of CPT, ICD-10, and HCPCS codes. Take your time to select the correct answer.',
-                    type: 'tutorial'
-                },
-                {
-                    title: 'Quiz Question 1',
-                    instruction: 'Which code set is used for medical, surgical, and diagnostic services?',
-                    type: 'quiz',
-                    questions: [
-                        {
-                            question: 'Which code set is used for medical, surgical, and diagnostic services?',
-                            options: ['ICD-10-CM', 'CPT', 'HCPCS Level II', 'NDC'],
-                            answer: 'CPT'
-                        }
-                    ]
-                },
-                {
-                    title: 'Quiz Question 2',
-                    instruction: 'Which code is used to identify a diagnosis of essential hypertension?',
-                    type: 'quiz',
-                    questions: [
-                        {
-                            question: 'Which code is used to identify a diagnosis of essential hypertension?',
-                            options: ['S90.419A', 'I10', '200.00', 'G89.4'],
-                            answer: 'I10'
-                        }
-                    ]
-                },
-                {
-                    title: 'Quiz Question 3',
-                    instruction: 'Which code set is used for supplies and durable medical equipment?',
-                    type: 'quiz',
-                    questions: [
-                        {
-                            question: 'Which code set is used for supplies and durable medical equipment?',
-                            options: ['CPT', 'ICD-10-PCS', 'HCPCS Level II', 'ICD-10-CM'],
-                            answer: 'HCPCS Level II'
-                        }
-                    ]
-                },
-                {
-                    title: 'Module Complete!',
-                    instruction: 'Congratulations, you have completed the medical coding quiz!',
-                    type: 'complete'
-                }
-            ]
-        },
-        {
-            id: 'soap-notes',
-            title: 'Interactive SOAP Notes',
-            description: 'Practice writing a complete SOAP (Subjective, Objective, Assessment, Plan) note.',
-            difficulty: 'Beginner',
-            estimatedTime: '20 min',
-            icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2m-4 0V3m0 2H9m10 0a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h2m4 0h-4M9 5h6m-3 0V3a1 1 0 012 0v2m0 0h4a2 2 0 012 2v10a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a1 1 0 012 0z" /></svg>`,
-            steps: [
-                {
-                    title: 'Case Study: Samuel Jenkins',
-                    instruction: `A SOAP note is a method of documenting patient encounters. It stands for Subjective, Objective, Assessment, and Plan. You will fill out each section for a mock patient, Samuel Jenkins.
+    <!-- SOAP NOTES MODULE -->
+    <section id="soap">
+      <h2>SOAP Notes Module</h2>
+      <div class="scenario">
+        <strong>Scenario:</strong> After seeing a patient with complaints of back pain, you are required to document the encounter using the SOAP (Subjective, Objective, Assessment, Plan) format. Complete each section with the appropriate information.
+      </div>
+      <form id="soapForm" autocomplete="off">
+        <label>Patient Name <span style="color:#ba181b;">*</span></label>
+        <input type="text" id="soapName" required>
+        <label>Subjective (Patient Complaint)</label>
+        <textarea id="soapSubjective" required placeholder="Patient reports..."></textarea>
+        <label>Objective (Examination Findings)</label>
+        <textarea id="soapObjective" required placeholder="Exam reveals..."></textarea>
+        <label>Assessment (Diagnosis)</label>
+        <textarea id="soapAssessment" required placeholder="Most likely diagnosis is..."></textarea>
+        <label>Plan (Treatment Plan)</label>
+        <textarea id="soapPlan" required placeholder="Recommend..."></textarea>
+        <button type="submit">Save Note</button>
+        <button class="module-reset" onclick="resetModule(event, 'soapForm','soapFeedback')">Reset</button>
+      </form>
+      <div class="feedback" id="soapFeedback"></div>
+    </section>
 
-                    Patient Report: "I have had a bad cough for 3 days and feel a tightness in my chest."
-                    Vitals: Temperature: 99.5°F, Blood Pressure: 125/85 mm Hg, Respiration Rate: 18 bpm.
-                    Physical Exam: Mild wheezing in the upper lungs. No fever.`,
-                    type: 'tutorial'
-                },
-                {
-                    title: 'Section 1: Subjective',
-                    instruction: 'The subjective section documents the patient\'s personal description of their health condition. Based on the case study, write the patient\'s chief complaint and history of present illness.',
-                    type: 'form',
-                    formFields: [
-                        {id: 'subjective', label: 'Patient Report', type: 'textarea', placeholder: 'Enter the patient\'s report here...'}
-                    ]
-                },
-                {
-                    title: 'Section 2: Objective',
-                    instruction: 'The objective section records measurable and observable data, such as vital signs and physical exam findings. Enter the patient\'s vitals and exam findings from the case study.',
-                    type: 'form',
-                    formFields: [
-                        {id: 'temperature', label: 'Temperature (°F)', type: 'text', placeholder: 'e.g., 99.5'},
-                        {id: 'bloodPressure', label: 'Blood Pressure (mm Hg)', type: 'text', placeholder: 'e.g., 125/85'},
-                        {id: 'examFindings', label: 'Exam Findings', type: 'textarea', placeholder: 'e.g., Mild wheezing...'}
-                    ]
-                },
-                {
-                    title: 'Section 3: Assessment',
-                    instruction: 'The assessment is a medical diagnosis for the patient\'s condition. Based on the subjective and objective information, provide a diagnosis.',
-                    type: 'form',
-                    formFields: [
-                        {id: 'assessment', label: 'Diagnosis', type: 'text', placeholder: 'e.g., Acute Bronchitis'}
-                    ]
-                },
-                {
-                    title: 'Section 4: Plan',
-                    instruction: 'The plan outlines the next steps for the patient\'s care, including treatments, referrals, or follow-up instructions. Describe the plan for this patient.',
-                    type: 'form',
-                    formFields: [
-                        {id: 'plan', label: 'Treatment Plan', type: 'textarea', placeholder: 'e.g., Prescribe Z-Pak, advise rest and fluids...'}
-                    ]
-                },
-                {
-                    title: 'Self-Assessment: Sample SOAP Note',
-                    instruction: `Great job! Now, compare your SOAP note to the sample note below. Remember, while the content may vary, the structure and key information are crucial.
+    <!-- INSURANCE VERIFICATION MODULE -->
+    <section id="insurance">
+      <h2>Insurance Verification Module</h2>
+      <div class="scenario">
+        <strong>Scenario:</strong> A patient is scheduled for an expensive imaging procedure. Verify the provided insurance details, noting the policy number, eligibility, and any required pre-authorizations.
+      </div>
+      <form id="insuranceForm" autocomplete="off">
+        <label>Patient Name</label>
+        <input type="text" id="insName" required>
+        <label>Insurance Provider</label>
+        <input type="text" id="insProvider" required>
+        <label>Policy Number</label>
+        <input type="text" id="insPolicy" required>
+        <label>Coverage Type</label>
+        <select id="insCoverage">
+          <option value="PPO">PPO</option>
+          <option value="HMO">HMO</option>
+          <option value="Medicaid">Medicaid</option>
+          <option value="Medicare">Medicare</option>
+          <option value="Other">Other</option>
+        </select>
+        <label>Pre-Auth Required?</label>
+        <select id="insAuth">
+          <option value="Yes">Yes</option>
+          <option value="No">No</option>
+        </select>
+        <label>
+          Eligibility Verified
+          <input type="checkbox" id="insEligible" value="yes">
+        </label>
+        <button type="submit">Confirm Verification</button>
+        <button class="module-reset" onclick="resetModule(event,'insuranceForm','insFeedback')">Reset</button>
+      </form>
+      <div class="feedback" id="insFeedback"></div>
+    </section>
 
-                    <div class="mt-4 p-4 border rounded-lg bg-gray-50">
-                        <h4 class="font-bold text-lg mb-2">Sample Note:</h4>
-                        <p><strong class="font-semibold">S:</strong> Patient is a 37-year-old male presenting with a persistent cough for 3 days and tightness in his chest. Denies fever. No other complaints.</p>
-                        <p><strong class="font-semibold">O:</strong> Temp: 99.5°F, BP: 125/85. Physical exam reveals mild bilateral wheezing in the upper lung lobes. No other signs of distress.</p>
-                        <p><strong class="font-semibold">A:</strong> Acute Bronchitis.</p>
-                        <p><strong class="font-semibold">P:</strong> 1. Prescribe Z-Pak (Azithromycin 250mg) as per protocol. 2. Advise patient to get plenty of rest and stay hydrated. 3. Instruct patient to follow-up in 7-10 days or sooner if symptoms worsen.</p>
-                    </div>`,
-                    type: 'tutorial'
-                },
-                {
-                    title: 'Module Complete!',
-                    instruction: 'You have successfully completed the SOAP notes training. Good work!',
-                    type: 'complete'
-                }
-            ]
-        },
-        {
-            id: 'denial-management',
-            title: 'Interactive Denial Management',
-            description: 'A guided workflow to identify and resolve a common claim denial.',
-            difficulty: 'Intermediate',
-            estimatedTime: '15 min',
-            icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
-            steps: [
-                {
-                    title: 'Introduction to Denial Management',
-                    instruction: 'In this module, you will learn to manage denied claims, a crucial part of the revenue cycle. Denials can be caused by many factors, from simple data entry errors to complex coding issues.',
-                    type: 'tutorial'
-                },
-                {
-                    title: 'Case Study: Claim Denial',
-                    instruction: 'A claim for Patient ID #7890 was denied by the payer. The denial reason is listed as "Invalid Procedure Code." You need to find the correct code to resubmit the claim.',
-                    type: 'tutorial'
-                },
-                {
-                    title: 'Identify the Correct Code',
-                    instruction: 'The claim was denied for a "routine office visit." The incorrect code "99211" was used. Which of the following is the correct CPT code for a routine office visit?',
-                    type: 'quiz',
-                    questions: [
-                        {
-                            question: 'What is the correct CPT code for a routine office visit?',
-                            options: ['99211', '99213', '99201', '99301'],
-                            answer: '99213'
-                        },
-                        {
-                            question: 'What is the most common denial code for a claim that was submitted after the payer\'s deadline?',
-                            options: ['CO 45', 'PR 109', 'OA 18', 'CO 29'],
-                            answer: 'CO 29'
-                        }
-                    ]
-                },
-                {
-                    title: 'Module Complete!',
-                    instruction: 'You have successfully identified the denial reason and the correct code. This process helps ensure proper and timely reimbursement for services.',
-                    type: 'complete'
-                }
-            ]
-        },
-        {
-            id: 'prior-authorization',
-            title: 'Prior Authorization Procedures',
-            description: 'A guided simulation of the prior authorization process for a service.',
-            difficulty: 'Intermediate',
-            estimatedTime: '15 min',
-            icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>`,
-            steps: [
-                {
-                    title: 'Introduction to Prior Authorization',
-                    instruction: 'Prior authorization, also known as pre-certification, is the process of getting approval from a patient\'s health insurance company before a medical service is performed. This is crucial for avoiding denials. In this scenario, a patient needs an MRI, which requires prior authorization.',
-                    type: 'tutorial'
-                },
-                {
-                    title: 'Gathering Information',
-                    instruction: 'The insurance company will require specific information to approve the request. Which of the following is NOT typically required for a prior authorization request?',
-                    type: 'quiz',
-                    questions: [
-                        {
-                            question: 'Which of the following is NOT typically required for a prior authorization request?',
-                            options: ['Patient\'s full name and date of birth', 'Physician\'s name and NPI number', 'The patient\'s social media profile', 'CPT and ICD-10 codes for the service'],
-                            answer: 'The patient\'s social media profile'
-                        }
-                    ]
-                },
-                {
-                    title: 'Submitting the Request',
-                    instruction: 'Once all the required information is gathered, you would submit the request to the payer via their online portal, phone, or fax. You must then track the request status and document the approval number in the patient\'s record.',
-                    type: 'tutorial'
-                },
-                {
-                    title: 'Module Complete!',
-                    instruction: 'You have successfully completed the prior authorization module! This process is essential for ensuring claims are paid without issue.',
-                    type: 'complete'
-                }
-            ]
-        },
-        {
-            id: 'ar-aging',
-            title: 'A/R Aging & Claims Follow-up',
-            description: 'Learn to read an A/R aging report and prioritize claims for follow-up.',
-            difficulty: 'Advanced',
-            estimatedTime: '20 min',
-            icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17h6m-6 4h6m-6-8h6m-2-5h2m-2-5h2M7 3h10a2 2 0 012 2v14a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2z" /></svg>`,
-            steps: [
-                {
-                    title: 'Introduction to A/R Aging',
-                    instruction: 'Accounts Receivable (A/R) Aging is a report that categorizes unpaid claims by the length of time they have been outstanding. This helps billing staff prioritize which claims to follow up on. Claims with a higher aging period are more likely to be written off if not addressed promptly.',
-                    type: 'tutorial'
-                },
-                {
-                    title: 'Analyzing an A/R Report',
-                    instruction: 'Review the following aging report. Claims aged 90+ days are a top priority. Identify the patient with the claim that has been outstanding the longest.<table class="ar-table mt-4 rounded-lg overflow-hidden shadow-sm"><thead><tr><th>Patient Name</th><th>Claim ID</th><th>Service Date</th><th>Amount Due</th><th>Aging Days</th></tr></thead><tbody><tr><td>John Smith</td><td>C12345</td><td>2023-11-20</td><td>$150.00</td><td>45</td></tr><tr><td>Jane Doe</td><td>C12346</td><td>2023-10-15</td><td>$275.00</td><td>75</td></tr><tr><td class="bg-red-50">Alice Johnson</td><td class="bg-red-50">C12347</td><td class="bg-red-50">2023-08-01</td><td class="bg-red-50">$420.00</td><td class="bg-red-50">120</td></tr><tr><td>Bob Williams</td><td>C12348</td><td>2023-11-05</td><td>$85.00</td><td>60</td></tr></tbody></table>',
-                    type: 'quiz',
-                    questions: [
-                        {
-                            question: 'Based on the report, which claim has been outstanding the longest?',
-                            options: ['Jane Doe', 'John Smith', 'Alice Johnson', 'Bob Williams'],
-                            answer: 'Alice Johnson'
-                        }
-                    ]
-                },
-                {
-                    title: 'Module Complete!',
-                    instruction: 'You have correctly identified the highest-priority claim. This skill is vital for maintaining a healthy revenue cycle and minimizing lost revenue. Your understanding of A/R aging is now complete!',
-                    type: 'complete'
-                }
-            ]
-        }
-    ];
+    <!-- PROVIDER MESSAGING MODULE -->
+    <section id="messaging">
+      <h2>Provider Messaging Module</h2>
+      <div class="scenario">
+        <strong>Scenario:</strong> A provider has sent you a secure message requesting you clarify a patient's medication history. Compose a reply and mark the conversation as resolved.
+      </div>
+      <form id="messageForm" autocomplete="off">
+        <label>Provider</label>
+        <select id="msgProvider">
+          <option>Dr. Lee</option>
+          <option>Dr. Morgan</option>
+          <option>Dr. Patel</option>
+        </select>
+        <label>Message Subject</label>
+        <input type="text" id="msgSubject" required>
+        <label>Message</label>
+        <textarea id="msgBody" required></textarea>
+        <label>
+          Mark as Resolved <input type="checkbox" id="msgResolved">
+        </label>
+        <button type="submit">Send Reply</button>
+        <button class="module-reset" onclick="resetModule(event,'messageForm','msgFeedback')">Reset</button>
+      </form>
+      <div class="feedback" id="msgFeedback"></div>
+      <div id="messageLog"></div>
+    </section>
 
-    // --- DOM Elements ---
-    const loadingSpinner = document.getElementById('loading-spinner');
-    const dashboardView = document.getElementById('dashboard-view');
-    const moduleView = document.getElementById('module-view');
-    const userInfoEl = document.getElementById('user-info');
-    const modulesContainer = document.getElementById('modules-container');
-    const overallProgressBar = document.getElementById('overall-progress-bar');
-    const overallProgressText = document.getElementById('overall-progress-text');
-    const moduleTitleEl = document.getElementById('module-title');
-    const moduleProgressBar = document.getElementById('module-progress-bar');
-    const moduleProgressText = document.getElementById('module-progress-text');
-    const moduleContentEl = document.getElementById('module-content');
-    const prevStepBtn = document.getElementById('prev-step-btn');
-    const nextStepBtn = document.getElementById('next-step-btn');
-    const submitQuizBtn = document.getElementById('submit-quiz-btn');
-    const backToDashboardBtn = document.getElementById('back-to-dashboard-btn');
+    <!-- DOCUMENT UPLOAD MODULE -->
+    <section id="documents">
+      <h2>Document Upload Module</h2>
+      <div class="scenario">
+        <strong>Scenario:</strong> A patient brings a PDF of their prior MRI results and a scanned insurance card. Upload both documents to their record and confirm their successful inclusion.
+      </div>
+      <form id="docUploadForm" autocomplete="off">
+        <label>Patient Name</label>
+        <input type="text" id="docName" required>
+        <label>Document Type</label>
+        <select id="docType">
+          <option>Insurance Card</option>
+          <option>Medical Report</option>
+          <option>ID Proof</option>
+          <option>Consent Form</option>
+          <option>Other</option>
+        </select>
+        <label>Choose File</label>
+        <input type="file" id="docFile" accept=".pdf,.jpg,.jpeg,.png,.bmp" required>
+        <button type="submit">Upload Document</button>
+        <button class="module-reset" onclick="resetModule(event,'docUploadForm','docFeedback')">Reset</button>
+      </form>
+      <div class="feedback" id="docFeedback"></div>
+      <ul id="docList"></ul>
+    </section>
 
-    // --- LocalStorage Functions ---
-    const loadProgress = () => {
-        try {
-            const savedProgress = localStorage.getItem('ehrTrainingProgress');
-            if (savedProgress) {
-                state.userProgress = JSON.parse(savedProgress);
-            }
-        } catch (e) {
-            console.error("Could not load progress from localStorage:", e);
-        }
-    };
+    <!-- ROLE-BASED DASHBOARDS MODULE -->
+    <!-- (Dashboard is the first section) -->
 
-    const saveProgress = (moduleId, stepIndex) => {
-        const module = modules.find(m => m.id === moduleId);
-        if (!module) return;
+    <!-- LAB ORDERS MODULE -->
+    <section id="labs">
+      <h2>Lab Orders Module</h2>
+      <div class="scenario">
+        <strong>Scenario:</strong> The provider has ordered a Complete Blood Count (CBC) and a lipid panel for a patient. Enter the lab orders, confirm required fasting, and provide patient instructions.
+      </div>
+      <form id="labForm" autocomplete="off">
+        <label>Patient Name</label>
+        <input type="text" id="labName" required>
+        <label>Lab Test(s) Ordered</label>
+        <select id="labTests" multiple required style="height:4.5em;">
+          <option>Complete Blood Count (CBC)</option>
+          <option>Lipid Panel</option>
+          <option>HbA1c</option>
+          <option>Metabolic Panel</option>
+          <option>COVID-19 PCR</option>
+          <option>Urinalysis</option>
+        </select>
+        <label>
+          Fasting Required?
+          <input type="checkbox" id="labFasting">
+        </label>
+        <label>Patient Instructions</label>
+        <textarea id="labInstr" required></textarea>
+        <button type="submit">Submit Lab Order</button>
+        <button class="module-reset" onclick="resetModule(event,'labForm','labFeedback')">Reset</button>
+      </form>
+      <div class="feedback" id="labFeedback"></div>
+      <ul id="labOrders"></ul>
+    </section>
 
-        const totalSteps = module.steps.length;
-        const progress = Math.min(100, Math.round(((stepIndex) / (totalSteps - 1)) * 100));
+    <!-- PRODUCTIVITY REPORTS MODULE -->
+    <section id="reports">
+      <h2>Productivity Reports Module</h2>
+      <div class="scenario">
+        <strong>Scenario:</strong> Review and benchmark your daily productivity: number of registrations, appointments scheduled, notes entered, and appeals processed. Identify areas for improvement.
+      </div>
+      <button class="small-btn" onclick="generateReport()">Generate Productivity Report</button>
+      <div class="feedback" id="reportFeedback"></div>
+      <table id="productivityTable" class="hidden">
+        <thead><tr>
+            <th>Metric</th><th>Count</th>
+          </tr></thead>
+        <tbody>
+          <tr><td>Patients Registered</td><td id="prodReg"></td></tr>
+          <tr><td>Appointments Scheduled</td><td id="prodAppt"></td></tr>
+          <tr><td>SOAP Notes Entered</td><td id="prodSoap"></td></tr>
+          <tr><td>Appeals Processed</td><td id="prodAppeals"></td></tr>
+          <tr><td>Lab Orders Submitted</td><td id="prodLabs"></td></tr>
+          <tr><td>Documents Uploaded</td><td id="prodDocs"></td></tr>
+          <tr><td>Insurance Verifications</td><td id="prodIns"></td></tr>
+        </tbody>
+      </table>
+    </section>
 
-        state.userProgress[moduleId] = {
-            progress: progress,
-            lastStep: stepIndex,
-            completed: progress >= 100
-        };
+    <!-- CAREER PATH TRACKER MODULE -->
+    <section id="career">
+      <h2>Career Path Tracker Module</h2>
+      <div class="scenario">
+        <strong>Scenario:</strong> You are working toward certification as a Certified Outpatient Clinical Appeals Specialist (COCAS). Track your key milestones, CEUs earned, and credentialing progress.
+      </div>
+      <form id="careerForm" autocomplete="off">
+        <label>Current Role</label>
+        <input type="text" id="careerRole" required>
+        <label>Certification Pursued</label>
+        <select id="careerCert">
+          <option>COCAS</option>
+          <option>Registered Health Information Tech (RHIT)</option>
+          <option>Certified Professional Coder (CPC)</option>
+          <option>Certified Medical Office Manager (CMOM)</option>
+          <option>Other</option>
+        </select>
+        <label>CEUs Earned</label>
+        <input type="number" id="careerCEU" min="0" required>
+        <label>Next Milestone/Exam Date</label>
+        <input type="date" id="careerMilestone">
+        <button type="submit">Update Tracker</button>
+        <button class="module-reset" onclick="resetModule(event,'careerForm','careerFeedback')">Reset</button>
+      </form>
+      <div class="feedback" id="careerFeedback"></div>
+      <ul id="careerLog"></ul>
+    </section>
 
-        try {
-            localStorage.setItem('ehrTrainingProgress', JSON.stringify(state.userProgress));
-        } catch (e) {
-            console.error("Could not save progress to localStorage:", e);
-        }
-    };
+    <!-- APPEALS MANAGEMENT MODULE -->
+    <section id="appeals">
+      <h2>Appeals Management Module</h2>
+      <div class="scenario">
+        <strong>Scenario:</strong> A claim denial is received for an outpatient procedure, citing insufficient documentation. Prepare and submit a first-level appeal, documenting all actions and outcomes.
+      </div>
+      <form id="appealForm" autocomplete="off">
+        <label>Patient Name</label>
+        <input type="text" id="appealName" required>
+        <label>Claim Number</label>
+        <input type="text" id="appealClaim" required>
+        <label>Reason for Denial</label>
+        <input type="text" id="appealReason" required>
+        <label>Appeal Justification</label>
+        <textarea id="appealJustify" required></textarea>
+        <label>
+          Attach Documentation <input type="file" id="appealDoc" accept=".pdf,.doc,.docx,.jpg,.png">
+        </label>
+        <button type="submit">Submit Appeal</button>
+        <button class="module-reset" onclick="resetModule(event,'appealForm','appealFeedback')">Reset</button>
+      </form>
+      <div class="feedback" id="appealFeedback"></div>
+      <ul id="appealLog"></ul>
+    </section>
 
-    // --- App Rendering ---
-    const renderApp = () => {
-        loadingSpinner.classList.add('hidden');
-        if (state.currentView === 'dashboard') {
-            renderDashboard();
-            dashboardView.classList.remove('hidden');
-            moduleView.classList.add('hidden');
-        } else {
-            renderModule();
-            dashboardView.classList.add('hidden');
-            moduleView.classList.remove('hidden');
-        }
-    };
+    <!-- AUDIT SIMULATION MODULE -->
+    <section id="audit">
+      <h2>Audit Simulation Module</h2>
+      <div class="scenario">
+        <strong>Scenario:</strong> Simulate a compliance audit by reviewing a sample medical record for completeness and accuracy. Document any discrepancies or required corrections.
+      </div>
+      <form id="auditForm" autocomplete="off">
+        <label>Medical Record Number</label>
+        <input type="text" id="auditMRN" required>
+        <label>Sections Reviewed</label>
+        <select id="auditSection" multiple required style="height:4.5em;">
+          <option>Registration</option>
+          <option>SOAP Note</option>
+          <option>Lab Orders</option>
+          <option>Insurance Verification</option>
+          <option>Appeals</option>
+          <option>Document Upload</option>
+        </select>
+        <label>Discrepancies Noted</label>
+        <textarea id="auditDiscrepancy"></textarea>
+        <label>
+          Corrections Made 
+          <input type="checkbox" id="auditCorrected">
+        </label>
+        <button type="submit">Submit Audit</button>
+        <button class="module-reset" onclick="resetModule(event,'auditForm','auditFeedback')">Reset</button>
+      </form>
+      <div class="feedback" id="auditFeedback"></div>
+      <ul id="auditLog"></ul>
+    </section>
 
-    const renderDashboard = () => {
-        modulesContainer.innerHTML = '';
-        let totalModules = 0;
-        let totalCompleted = 0;
-        modules.forEach(module => {
-            totalModules++;
-            const progress = state.userProgress[module.id]?.progress || 0;
-            if (progress >= 100) {
-                totalCompleted++;
-            }
-            const cardHtml = `
-                <div class="ehr-card flex flex-col space-y-4">
-                    <div class="flex items-center space-x-4">
-                        ${module.icon}
-                        <div>
-                            <h3 class="text-xl font-semibold text-gray-900">${module.title}</h3>
-                            <span class="text-sm font-medium text-gray-500">${module.difficulty} • ${module.estimatedTime}</span>
-                        </div>
-                    </div>
-                    <p class="text-gray-600">${module.description}</p>
-                    <div class="mt-4">
-                        <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="h-2 rounded-full ${progress >= 100 ? 'bg-green-500' : 'bg-indigo-500'}" style="width: ${progress}%;"></div>
-                        </div>
-                        <p class="text-sm text-gray-500 mt-1 text-right">${progress}% Complete</p>
-                    </div>
-                    <button id="start-btn-${module.id}" class="w-full px-6 py-2 rounded-full text-white font-medium shadow-md transition-colors duration-200 ${progress >= 100 ? 'bg-green-600 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'}">
-                        ${progress >= 100 ? 'Completed' : 'Start Training'}
-                    </button>
-                </div>
-            `;
-            modulesContainer.innerHTML += cardHtml;
-        });
+    <!-- COMPLIANCE REVIEW MODULE -->
+    <section id="compliance">
+      <h2>Compliance Review Module</h2>
+      <div class="scenario">
+        <strong>Scenario:</strong> Review the office's handling of PHI and patient consents. Confirm compliance with HIPAA policies and document any compliance gaps.
+      </div>
+      <form id="complianceForm" autocomplete="off">
+        <label>Review Period Start</label>
+        <input type="date" id="complianceStart" required>
+        <label>Review Period End</label>
+        <input type="date" id="complianceEnd" required>
+        <label>
+          HIPAA Acknowledgments On File 
+          <input type="checkbox" id="complianceHIPAA">
+        </label>
+        <label>
+          PHI Release Authorized 
+          <input type="checkbox" id="compliancePHI">
+        </label>
+        <label>Compliance Gaps Noted</label>
+        <textarea id="complianceGaps"></textarea>
+        <button type="submit">Record Review</button>
+        <button class="module-reset" onclick="resetModule(event,'complianceForm','complianceFeedback')">Reset</button>
+      </form>
+      <div class="feedback" id="complianceFeedback"></div>
+      <ul id="complianceLog"></ul>
+    </section>
 
-        const overallProgress = totalModules > 0 ? Math.round((totalCompleted / totalModules) * 100) : 0;
-        overallProgressBar.style.width = `${overallProgress}%`;
-        overallProgressText.textContent = `${overallProgress}% Complete`;
+    <!-- ADVANCED WORKFLOWS MODULE -->
+    <section id="workflows">
+      <h2>Advanced Workflows Module</h2>
+      <div class="scenario">
+        <strong>Scenario:</strong> Simulate a multi-step new patient workflow: complete registration, then book an appointment, file insurance details, and upload required documents in sequence. The workflow tracks progress at each stage.
+      </div>
+      <form id="workflowForm" autocomplete="off">
+        <label><input type="checkbox" id="wfReg"> Registration Completed</label><br>
+        <label><input type="checkbox" id="wfAppt"> Appointment Scheduled</label><br>
+        <label><input type="checkbox" id="wfIns"> Insurance Filed</label><br>
+        <label><input type="checkbox" id="wfDoc"> Document Uploaded</label><br>
+        <button type="submit">Validate Workflow</button>
+        <button class="module-reset" onclick="resetModule(event,'workflowForm','workflowFeedback')">Reset</button>
+      </form>
+      <div class="feedback" id="workflowFeedback"></div>
+      <ul id="workflowLog"></ul>
+    </section>
+  </main>
+  <script>
+    // --- State management ---
+    let patients=[], appointments=[], soapNotes=[], insVerifications=[],
+        messages=[], docs=[], labs=[], productivity={reg:0,appt:0,soap:0,appeals:0,labs:0,docs:0,ins:0},
+        career=[], appeals=[], audits=[], compliance=[], workflowLog=[];
 
-        modules.forEach(module => {
-            const btn = document.getElementById(`start-btn-${module.id}`);
-            if (btn) {
-                btn.addEventListener('click', () => {
-                    state.activeModuleId = module.id;
-                    state.currentStepIndex = state.userProgress[module.id]?.lastStep || 0;
-                    state.currentView = 'module';
-                    renderApp();
-                });
-            }
-        });
-    };
+    // --- Navigation ---
+    function showModule(mod) {
+      document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('section').forEach(sec => sec.classList.remove('active'));
+      document.querySelector('button[data-module="'+mod+'"]').classList.add('active');
+      document.getElementById(mod).classList.add('active');
+      if (mod === 'dashboard') loadDashboard();
+    }
 
-    const renderModule = () => {
-        const module = modules.find(m => m.id === state.activeModuleId);
-        if (!module) return;
-        moduleTitleEl.textContent = module.title;
-        renderStep(state.currentStepIndex);
-    };
-
-    const renderStep = (stepIndex) => {
-        const module = modules.find(m => m.id === state.activeModuleId);
-        if (!module || !module.steps[stepIndex]) return;
-
-        const step = module.steps[stepIndex];
-        moduleContentEl.innerHTML = '';
-
-        const progress = Math.round(((stepIndex) / (module.steps.length - 1)) * 100);
-        moduleProgressBar.style.width = `${progress}%`;
-        moduleProgressText.textContent = `${progress}% Complete`;
-
-        prevStepBtn.style.display = stepIndex > 0 && step.type !== 'complete' ? 'inline-block' : 'none';
-        nextStepBtn.style.display = step.type !== 'complete' && step.type !== 'quiz' && step.type !== 'calendar' ? 'inline-block' : 'none';
-        submitQuizBtn.style.display = step.type === 'quiz' ? 'inline-block' : 'none';
-
-        let stepHtml = `<h3 class="text-2xl font-semibold mb-4">${step.title}</h3><p class="text-gray-700">${step.instruction}</p>`;
-        if (step.type === 'form') {
-            const formFieldsHtml = step.formFields.map(field => {
-                const inputId = `form-${field.id}`;
-                if (field.type === 'select') {
-                    const optionsHtml = field.options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
-                    return `
-                        <div class="mt-4">
-                            <label for="${inputId}" class="block text-sm font-medium text-gray-700">${field.label}</label>
-                            <select id="${inputId}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                <option value="" disabled selected>Select...</option>
-                                ${optionsHtml}
-                            </select>
-                        </div>
-                    `;
-                }
-                if (field.type === 'textarea') {
-                    return `
-                        <div class="mt-4">
-                            <label for="${inputId}" class="block text-sm font-medium text-gray-700">${field.label}</label>
-                            <textarea id="${inputId}" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="${field.placeholder || ''}"></textarea>
-                        </div>
-                    `;
-                }
-                return `
-                    <div class="mt-4">
-                        <label for="${inputId}" class="block text-sm font-medium text-gray-700">${field.label}</label>
-                        <input type="${field.type}" id="${inputId}" placeholder="${field.placeholder || ''}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                    </div>
-                `;
-            }).join('');
-            stepHtml += `<form id="module-form">${formFieldsHtml}</form>`;
-            nextStepBtn.style.display = 'inline-block';
-        } else if (step.type === 'quiz') {
-            const quizHtml = step.questions.map((q, qIndex) => `
-                <div class="mt-6 p-4 bg-gray-100 rounded-lg">
-                    <p class="font-medium text-gray-800">${q.question}</p>
-                    <div class="mt-2 space-y-2">
-                        ${q.options.map((option, oIndex) => `
-                            <label class="flex items-center space-x-3">
-                                <input type="radio" name="quiz-q${stepIndex}-${qIndex}" value="${option}" class="text-indigo-600 focus:ring-indigo-500">
-                                <span class="text-gray-700">${option}</span>
-                            </label>
-                        `).join('')}
-                    </div>
-                </div>
-            `).join('');
-            stepHtml += `<form id="module-quiz">${quizHtml}</form>`;
-        } else if (step.type === 'calendar') {
-            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-            const calendarHtml = `
-                <div class="calendar-grid mt-6">
-                    ${days.map(day => `<div class="header-cell">${day}</div>`).join('')}
-                    ${Array.from({length: 35}, (_, i) => {
-                        const date = i + 1;
-                        const isAppointmentDay = (date === 17 && days[date % 7] === 'Thu');
-                        const cellClass = isAppointmentDay ? '' : 'text-gray-400 cursor-not-allowed';
-                        return `<div data-date="${date}" class="calendar-cell ${cellClass}">${date}</div>`;
-                    }).join('')}
-                </div>
-            `;
-            stepHtml += calendarHtml;
-            moduleContentEl.innerHTML = stepHtml;
-            document.querySelector(`[data-date="17"]`).classList.remove('text-gray-400', 'cursor-not-allowed');
-            document.querySelector(`[data-date="17"]`).classList.add('hover:bg-indigo-100');
-            document.querySelector(`[data-date="17"]`).addEventListener('click', () => {
-                const targetCell = document.querySelector(`[data-date="17"]`);
-                targetCell.classList.add('bg-indigo-500', 'text-white', 'font-bold', 'appointment-cell');
-                targetCell.classList.remove('hover:bg-indigo-100');
-                nextStepBtn.style.display = 'inline-block';
-            });
-            return;
-        } else if (step.type === 'complete') {
-        }
-
-        moduleContentEl.innerHTML = stepHtml;
-    };
-
-    // --- Event Handlers ---
-    prevStepBtn.addEventListener('click', () => {
-        state.currentStepIndex = Math.max(0, state.currentStepIndex - 1);
-        renderStep(state.currentStepIndex);
+    document.querySelectorAll('nav button').forEach(btn=>{
+      btn.onclick = function(){ showModule(this.getAttribute('data-module')) }
     });
 
-    nextStepBtn.addEventListener('click', () => {
-        const module = modules.find(m => m.id === state.activeModuleId);
-        if (!module) return;
-        state.currentStepIndex = Math.min(module.steps.length - 1, state.currentStepIndex + 1);
-        saveProgress(state.activeModuleId, state.currentStepIndex);
-        renderStep(state.currentStepIndex);
+    // --- DASHBOARD dynamic metrics ---
+    function loadDashboard() {
+      document.getElementById('dashboard-appointments').innerHTML = appointments.length ?
+        `<b>${appointments.length}</b> scheduled<br>${appointments.map(a=>a.date+' @ '+a.time).join('<br>')}`:"No appointments";
+      document.getElementById('dashboard-patients').innerText = patients.length+" total";
+      document.getElementById('dashboard-messages').innerText = messages.filter(m=>!m.resolved).length + " open";
+      let prod = `<b>Notes:</b> ${soapNotes.length}<br><b>Labs:</b> ${labs.length}`;
+      document.getElementById('dashboard-productivity').innerHTML = prod;
+    }
+    loadDashboard();
+
+    // --- PATIENT REGISTRATION ---
+    document.getElementById('registrationForm').onsubmit = function(e){
+      e.preventDefault();
+      let name = regName.value.trim(),
+          emerg = regEmerName.value.trim(),
+          emergPhone = regEmerPhone.value.trim();
+      if(!name||!regDOB.value||!emerg||!emergPhone){
+        feedback('regFeedback', "Please complete all required fields.", true); return;
+      }
+      patients.push({
+        name, dob: regDOB.value, gender: regGender.value, phone: regPhone.value,
+        email: regEmail.value, address: regAddress.value, insurance: regInsurance.value,
+        emerName: emerg, emerPhone: emergPhone
+      });
+      productivity.reg++;
+      feedback('regFeedback', "Patient registered successfully! ("+name+")");
+      loadDashboard();
+    }
+
+    // --- APPOINTMENT SCHEDULING ---
+    document.getElementById('appointmentForm').onsubmit = function(e){
+      e.preventDefault();
+      let name = apptName.value.trim(),
+          date = apptDate.value, time = apptTime.value, provider = apptProvider.value, reason = apptReason.value;
+      if(!name||!date||!time){
+        feedback('apptFeedback', "All required fields must be filled.", true); return;
+      }
+      appointments.push({name, provider, date, time, reason});
+      productivity.appt++;
+      feedback('apptFeedback', `Appointment scheduled for ${name} with ${provider} on ${date} at ${time}.`);
+      updateApptTable();
+      loadDashboard();
+    }
+    function updateApptTable() {
+      let tbl = document.getElementById('apptTable');
+      let list = document.getElementById('apptList');
+      if (appointments.length === 0){ tbl.classList.add('hidden'); return;}
+      list.innerHTML = appointments.map(a=>`
+        <tr><td>${a.date}</td><td>${a.time}</td><td>${a.name}</td><td>${a.provider}</td><td>${a.reason||'-'}</td></tr>
+      `).join('');
+      tbl.classList.remove('hidden');
+    }
+
+    // --- SOAP NOTES ---
+    document.getElementById('soapForm').onsubmit = function(e){
+      e.preventDefault();
+      let name = soapName.value.trim(), subj = soapSubjective.value.trim();
+      if(!name||!subj||!soapObjective.value.trim()||!soapAssessment.value.trim()||!soapPlan.value.trim()){
+        feedback('soapFeedback', "Please complete all fields of the SOAP note.", true); return;
+      }
+      soapNotes.push({
+        name, S: soapSubjective.value, O: soapObjective.value, 
+        A: soapAssessment.value, P: soapPlan.value
+      });
+      productivity.soap++;
+      feedback('soapFeedback', "SOAP Note for "+name+" saved. Remember to securely file all clinical documentation.");
+    }
+
+    // --- INSURANCE VERIFICATION ---
+    document.getElementById('insuranceForm').onsubmit = function(e){
+      e.preventDefault();
+      let name=insName.value.trim(), provider=insProvider.value.trim(), policy=insPolicy.value.trim();
+      if(!name||!provider||!policy){ feedback('insFeedback',"Please enter all insurance details.",true);return;}
+      let eligible = insEligible.checked ? "Eligibility verified" : "Eligibility not verified";
+      let authReq = insAuth.value==="Yes" ? "Pre-auth required." : "No pre-auth.";
+      productivity.ins++;
+      insVerifications.push({name, provider, policy, type:insCoverage.value, eligible, authReq});
+      feedback('insFeedback',
+        `Insurance for ${name} confirmed. ${eligible}. ${authReq}`);
+    }
+
+    // --- PROVIDER MESSAGING ---
+    document.getElementById('messageForm').onsubmit = function(e){
+      e.preventDefault();
+      let provider=msgProvider.value,subject=msgSubject.value.trim(), body=msgBody.value.trim(), resolved=msgResolved.checked;
+      if(!subject||!body){ feedback('msgFeedback','Please enter subject and message.',true); return;}
+      messages.push({provider,subject,body,resolved});
+      feedback('msgFeedback',`Message sent to ${provider}. Conversation marked as ${resolved?'resolved':'pending'}.`);
+      logMessages();
+    }
+    function logMessages(){
+      let log = document.getElementById('messageLog');
+      if (!messages.length){log.innerHTML=""; return;}
+      log.innerHTML = `<h4>Message Log</h4><ul>`+messages.map(m=>`<li><b>${m.provider}:</b> ${m.subject} (${m.resolved?'Resolved':'Open'})</li>`).join('')+"</ul>";
+    }
+
+    // --- DOCUMENT UPLOAD ---
+    document.getElementById('docUploadForm').onsubmit = function(e){
+      e.preventDefault();
+      let name = docName.value.trim(), file = docFile.files[0], type = docType.value;
+      if(!name||!file){ feedback('docFeedback','Please specify patient and select a file.',true); return;}
+      docs.push({name,type,file:file.name});
+      productivity.docs++;
+      feedback('docFeedback','Document uploaded for '+name+': '+file.name);
+      updateDocList();
+    }
+    function updateDocList(){
+      let list = document.getElementById('docList');
+      if(docs.length===0){list.innerHTML=""; return;}
+      list.innerHTML = docs.map(d=>`<li>${d.name}: ${d.type} (${d.file})</li>`).join('');
+    }
+
+    // --- LAB ORDERS ---
+    document.getElementById('labForm').onsubmit = function(e){
+      e.preventDefault();
+      let name=labName.value.trim(), tests=Array.from(labTests.selectedOptions).map(o=>o.value), fasting=labFasting.checked, instr=labInstr.value.trim();
+      if(!name||tests.length===0||!instr) {feedback('labFeedback',"Please specify patient, select at least one test, and add instructions.",true); return;}
+      labs.push({name,tests:tests.join(', '),fasting,instr});
+      productivity.labs++;
+      feedback('labFeedback',`Lab order for ${name} submitted. Tests: ${tests.join(', ')}. ${fasting?"Fasting required. ":""}Instructions: ${instr}`);
+      updateLabOrders();
+    }
+    function updateLabOrders(){
+      let list = document.getElementById('labOrders');
+      if(labs.length===0){list.innerHTML="";return;}
+      list.innerHTML = labs.map(l=>`<li>${l.name}: ${l.tests} | ${l.fasting?'Fasting':''}</li>`).join('');
+    }
+
+    // --- PRODUCTIVITY REPORTS ---
+    function generateReport(){
+      document.getElementById('prodReg').innerText = productivity.reg;
+      document.getElementById('prodAppt').innerText = productivity.appt;
+      document.getElementById('prodSoap').innerText = productivity.soap;
+      document.getElementById('prodAppeals').innerText = productivity.appeals || appeals.length;
+      document.getElementById('prodLabs').innerText = productivity.labs;
+      document.getElementById('prodDocs').innerText = productivity.docs;
+      document.getElementById('prodIns').innerText = productivity.ins;
+      document.getElementById('productivityTable').classList.remove('hidden');
+      feedback('reportFeedback',"Daily productivity report generated.");
+    }
+
+    // --- CAREER PATH TRACKER ---
+    document.getElementById('careerForm').onsubmit = function(e){
+      e.preventDefault();
+      let role=careerRole.value.trim(), cert=careerCert.value, ceu=careerCEU.value, milestone=careerMilestone.value;
+      if(!role||ceu===""){ feedback('careerFeedback', "Enter role and CEUs.",true); return; }
+      career.push({role,cert,ceu,milestone});
+      feedback('careerFeedback',"Tracker updated. Stay on track toward certification!");
+      updateCareerLog();
+    }
+    function updateCareerLog(){
+      let log = document.getElementById('careerLog');
+      if(!career.length){ log.innerHTML=""; return;}
+      log.innerHTML = career.map(c=> `<li>${c.role} | ${c.cert} | CEUs: ${c.ceu}${c.milestone?" | Next: "+c.milestone:""}</li>`).join('');
+    }
+
+    // --- APPEALS MANAGEMENT ---
+    document.getElementById('appealForm').onsubmit = function(e){
+      e.preventDefault();
+      let name=appealName.value.trim(), claim=appealClaim.value.trim(), reason=appealReason.value.trim(), justification=appealJustify.value.trim();
+      if(!name||!claim||!reason||!justification) {feedback('appealFeedback',"Please fill out all fields.",true);return;}
+      appeals.push({name,claim,reason,just:justification,doc:appealDoc.files[0]?appealDoc.files[0].name:""});
+      productivity.appeals++;
+      feedback('appealFeedback', "Appeal submitted for "+name+". Track payer response within 7 days.");
+      updateAppealLog();
+    }
+    function updateAppealLog(){
+      let log = document.getElementById('appealLog');
+      if(!appeals.length){log.innerHTML="";return;}
+      log.innerHTML = appeals.map(a=>`<li>Claim: ${a.claim} (${a.name}), Reason: ${a.reason}, Doc: ${a.doc||'N/A'}</li>`).join('');
+    }
+
+    // --- AUDIT SIMULATION ---
+    document.getElementById('auditForm').onsubmit = function(e){
+      e.preventDefault();
+      let mrn = auditMRN.value.trim(), secs = Array.from(auditSection.selectedOptions).map(o=>o.value), disc = auditDiscrepancy.value.trim(), corr = auditCorrected.checked;
+      if(!mrn||secs.length===0){feedback('auditFeedback',"Specify record and at least one section.",true);return;}
+      audits.push({mrn,secs:secs.join(', '),disc,corr});
+      feedback('auditFeedback',"Audit recorded: "+ (corr?"Corrections made.":"Needs follow up."));
+      updateAuditLog();
+    }
+    function updateAuditLog(){
+      let log = document.getElementById('auditLog');
+      if(!audits.length){ log.innerHTML=""; return;}
+      log.innerHTML = audits.map(a=>`<li>${a.mrn}: ${a.secs} | ${a.disc?("Issue: "+a.disc):"No issues"} | Corrected: ${a.corr?'Yes':'No'}</li>`).join('');
+    }
+
+    // --- COMPLIANCE REVIEW ---
+    document.getElementById('complianceForm').onsubmit = function(e){
+      e.preventDefault();
+      let s=complianceStart.value, e_=complianceEnd.value, hipaa=complianceHIPAA.checked, phi=compliancePHI.checked, gaps=complianceGaps.value.trim();
+      if(!s||!e_) {feedback('complianceFeedback',"Set review period dates.",true); return;}
+      compliance.push({s,e_,hipaa,phi,gaps});
+      feedback('complianceFeedback', `Compliance review recorded. All records ${hipaa&&phi?"in order":"require attention"}.`);
+      updateComplianceLog();
+    }
+    function updateComplianceLog(){
+      let log = document.getElementById('complianceLog');
+      if(!compliance.length){log.innerHTML="";return;}
+      log.innerHTML = compliance.map(c=>`<li>${c.s}–${c.e_}. HIPAA:${c.hipaa?'✔':'❌'}, PHI:${c.phi?'✔':'❌'}${c.gaps?' | Gaps: '+c.gaps:""}</li>`).join('');
+    }
+
+    // --- ADVANCED WORKFLOWS ---
+    document.getElementById('workflowForm').onsubmit = function(e){
+      e.preventDefault();
+      let valid = wfReg.checked&&wfAppt.checked&&wfIns.checked&&wfDoc.checked;
+      workflowLog.push({
+        reg:wfReg.checked, appt:wfAppt.checked, ins:wfIns.checked, doc:wfDoc.checked,
+        success:valid
+      });
+      feedback('workflowFeedback', valid? "All workflow steps complete! Patient onboarding workflow validated.":"Incomplete workflow. Ensure each step is checked off.", !valid);
+      updateWorkflowLog();
+    }
+    function updateWorkflowLog(){
+      let log = document.getElementById('workflowLog');
+      if(!workflowLog.length){log.innerHTML="";return;}
+      log.innerHTML = workflowLog.map((w,i)=>`<li>Attempt ${i+1}: ${w.reg?"✔":"❌"} Registration, ${w.appt?"✔":"❌"} Appt, ${w.ins?"✔":"❌"} Ins, ${w.doc?"✔":"❌"} Doc. Result: ${w.success?"Success":"Fail"}</li>`).join('');
+    }
+
+    // --- COMMON FEEDBACK AND RESET ---
+    function feedback(feedbackId,message,error){
+      let el = document.getElementById(feedbackId);
+      el.innerHTML = message;
+      el.style.display = 'block';
+      if(error) el.classList.add('error'); else el.classList.remove('error');
+      setTimeout(()=>{ el.style.display='none'; }, error? 4000:2500 );
+    }
+    function resetModule(e,formId,feedbackId){
+      e.preventDefault();
+      document.getElementById(formId).reset();
+      if(feedbackId) document.getElementById(feedbackId).style.display='none';
+    }
+
+    // Initialize module-dependent lists on each navigation
+    document.querySelectorAll('nav button').forEach(btn=>{
+      btn.addEventListener('click', function(){
+        let mod = this.getAttribute('data-module');
+        if(mod==='appointment') updateApptTable();
+        if(mod==='documents') updateDocList();
+        if(mod==='labs') updateLabOrders();
+        if(mod==='career') updateCareerLog();
+        if(mod==='appeals') updateAppealLog();
+        if(mod==='audit') updateAuditLog();
+        if(mod==='compliance') updateComplianceLog();
+        if(mod==='workflows') updateWorkflowLog();
+        if(mod==='messaging') logMessages();
+      });
     });
-
-    submitQuizBtn.addEventListener('click', () => {
-        const module = modules.find(m => m.id === state.activeModuleId);
-        const currentStep = module.steps[state.currentStepIndex];
-        let allCorrect = true;
-        currentStep.questions.forEach((q, qIndex) => {
-            const selectedAnswer = document.querySelector(`input[name="quiz-q${state.currentStepIndex}-${qIndex}"]:checked`)?.value;
-            if (selectedAnswer !== q.answer) {
-                allCorrect = false;
-            }
-        });
-
-        let message = '';
-        if (allCorrect) {
-            message = "Correct! You've successfully passed the assessment.";
-            state.currentStepIndex++;
-        } else {
-            message = "Incorrect. Please review the material and try again.";
-            state.currentStepIndex = 0;
-        }
-
-        const messageBoxHtml = `
-            <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                <div class="bg-white p-8 rounded-lg shadow-2xl max-w-sm text-center">
-                    <h3 class="text-xl font-bold mb-4">${allCorrect ? 'Great Job!' : 'Review Needed'}</h3>
-                    <p class="text-gray-700">${message}</p>
-                    <button id="close-modal" class="mt-6 px-6 py-2 bg-indigo-600 text-white rounded-full hover:bg-indigo-700">OK</button>
-                </div>
-            </div>
-        `;
-        document.body.insertAdjacentHTML('beforeend', messageBoxHtml);
-
-        document.getElementById('close-modal').addEventListener('click', () => {
-            document.querySelector('.fixed').remove();
-            saveProgress(state.activeModuleId, state.currentStepIndex);
-            renderStep(state.currentStepIndex);
-        });
-    });
-
-    backToDashboardBtn.addEventListener('click', () => {
-        state.currentView = 'dashboard';
-        renderApp();
-    });
-
-    // Initialize the app
-    loadProgress();
-    renderApp();
-</script>
+  </script>
 </body>
 </html>
